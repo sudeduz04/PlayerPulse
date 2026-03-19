@@ -7,7 +7,7 @@ use Illuminate\Http\JsonResponse;
 
 class BaseController extends Controller
 {
-    protected function sendResponse($data, string $message, int $code = 200): JsonResponse
+    protected function sendResponse(mixed $data, string $message, int $code = 200): JsonResponse
     {
         return response()->json([
             'success' => true,

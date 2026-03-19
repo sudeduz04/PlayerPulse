@@ -3,20 +3,21 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
     public function register(array $data): array
     {
-        $user = User::create([
+        $user = new User([
             'name' => $data['name'],
             'surname' => $data['surname'],
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'password' => $data['password'],
-            'role' => $data['role'],
         ]);
+        $user->role = $data['role'];
+        $user->save();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -28,11 +29,16 @@ class AuthService
 
     public function login(array $data): ?array
     {
-        if (!Auth::attempt(['email' => $data['email'], 'password' => $data['password']])) {
+        $user = User::where('email', $data['email'])->first();
+
+        if (!$user || !Hash::check($data['password'], $user->password)) {
             return null;
         }
 
-        $user = Auth::user();
+        if (!$user->status) {
+            return null;
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [
