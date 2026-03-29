@@ -10,8 +10,8 @@ class StorePlayerRequest extends ApiFormRequest
     public function rules(): array
     {
         return [
-            'team_id' => 'required|exists:teams,id',
-            'position_id' => 'required|exists:positions,id',
+            'team_id' => ['required', Rule::exists('teams', 'id')->whereNull('deleted_at')],
+            'position_id' => ['required', Rule::exists('positions', 'id')->whereNull('deleted_at')],
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'birth_date' => 'required|date|before:today',

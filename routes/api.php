@@ -12,12 +12,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::middleware('role:manager,coach')->group(function () {
-        Route::apiResource('teams', TeamController::class);
+        Route::apiResource('teams', TeamController::class)->only(['index', 'show', 'update']);
         Route::apiResource('players', PlayerController::class);
+    });
 
-        Route::middleware('role:manager')->group(function () {
-            Route::post('/teams/{team}/coaches', [TeamController::class, 'assignCoach']);
-            Route::delete('/teams/{team}/coaches/{user}', [TeamController::class, 'removeCoach']);
-        });
+    Route::middleware('role:manager')->group(function () {
+        Route::post('/teams', [TeamController::class, 'store']);
+        Route::delete('/teams/{team}', [TeamController::class, 'destroy']);
+        Route::post('/teams/{team}/coaches', [TeamController::class, 'assignCoach']);
+        Route::delete('/teams/{team}/coaches/{user}', [TeamController::class, 'removeCoach']);
     });
 });

@@ -32,11 +32,16 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (HttpException $e, Request $request) {
-            if ($e->getStatusCode() === 403 && ($request->expectsJson() || $request->is('api/*'))) {
+            if (($request->expectsJson() || $request->is('api/*'))
+                && in_array($e->getStatusCode(), [403, 404])) {
                 return response()->json([
                     'success' => false,
-                    'message' => $e->getMessage() ?: 'Forbidden',
-                ], 403);
+                    'message' => $e->getMessage() ?: match ($e->getStatusCode()) {
+                        404 => 'Resource not found',
+                        403 => 'Forbidden',
+                        default => 'Error',
+                    },
+                ], $e->getStatusCode());
             }
         });
     })->create();

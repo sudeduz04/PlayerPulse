@@ -13,7 +13,7 @@ class PlayerService
         $query = Players::with(['team', 'position']);
 
         if ($user->isRole('coach')) {
-            $teamIds = $user->teams()->pluck('teams.id');
+            $teamIds = $user->getTeamIds();
             $query->whereIn('team_id', $teamIds);
         }
 
@@ -37,7 +37,7 @@ class PlayerService
             });
         }
 
-        $perPage = min($filters['per_page'] ?? 15, 100);
+        $perPage = max(1, min((int) ($filters['per_page'] ?? 15), 100));
 
         return $query->latest()->paginate($perPage);
     }
@@ -97,7 +97,7 @@ class PlayerService
 
     private function authorizeCoachForTeam(User $user, int $teamId): void
     {
-        if (! $user->teams()->where('teams.id', $teamId)->exists()) {
+        if (! $user->getTeamIds()->contains($teamId)) {
             abort(403, 'You are not assigned to this team.');
         }
     }

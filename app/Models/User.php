@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -33,6 +34,11 @@ class User extends Authenticatable
     public function teams(): BelongsToMany
     {
         return $this->belongsToMany(Teams::class, 'team_user', 'user_id', 'team_id');
+    }
+
+    public function getTeamIds(): Collection
+    {
+        return once(fn () => $this->teams()->pluck('teams.id'));
     }
 
     protected $hidden = [

@@ -34,8 +34,8 @@ class UpdatePlayerRequest extends ApiFormRequest
         }
 
         return [
-            'team_id' => 'sometimes|required|exists:teams,id',
-            'position_id' => 'sometimes|required|exists:positions,id',
+            'team_id' => ['sometimes', 'required', Rule::exists('teams', 'id')->whereNull('deleted_at')],
+            'position_id' => ['sometimes', 'required', Rule::exists('positions', 'id')->whereNull('deleted_at')],
             'first_name' => 'sometimes|required|string|max:255',
             'last_name' => 'sometimes|required|string|max:255',
             'birth_date' => 'sometimes|required|date|before:today',

@@ -13,7 +13,7 @@ class TeamService
         $query = Teams::query()->withCount(['players', 'coaches']);
 
         if ($user->isRole('coach')) {
-            $teamIds = $user->teams()->pluck('teams.id');
+            $teamIds = $user->getTeamIds();
             $query->whereIn('id', $teamIds);
         }
 
@@ -29,7 +29,7 @@ class TeamService
             $query->where('name', 'like', '%'.$filters['search'].'%');
         }
 
-        $perPage = min($filters['per_page'] ?? 15, 100);
+        $perPage = max(1, min((int) ($filters['per_page'] ?? 15), 100));
 
         return $query->latest()->paginate($perPage);
     }
@@ -61,9 +61,11 @@ class TeamService
 
     public function delete(int $id, User $user): void
     {
-        $team = Teams::findOrFail($id);
+        if ($user->isRole('coach')) {
+            abort(403, 'Only managers can delete teams.');
+        }
 
-        $this->authorizeCoach($user, $team);
+        $team = Teams::findOrFail($id);
 
         $team->delete();
     }
@@ -84,7 +86,7 @@ class TeamService
 
     private function authorizeCoach(User $user, Teams $team): void
     {
-        if ($user->isRole('coach') && ! $user->teams()->where('teams.id', $team->id)->exists()) {
+        if ($user->isRole('coach') && ! $user->getTeamIds()->contains($team->id)) {
             abort(403, 'You are not assigned to this team.');
         }
     }
