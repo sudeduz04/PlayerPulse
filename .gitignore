@@ -1,1 +1,9 @@
 .idea
+CLAUDE.md
+.claude
+screen.png
+screen2.png
+screen3.png
+node_modules
+.phpunit.result.cache
+

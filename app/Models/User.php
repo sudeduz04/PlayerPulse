@@ -21,7 +21,13 @@ class User extends Authenticatable
         'phone',
         'password',
         'status',
+        'role',
     ];
+
+    public function isRole(string $role): bool
+    {
+        return $this->role === $role;
+    }
 
     protected $hidden = [
         'password',

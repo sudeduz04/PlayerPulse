@@ -6,6 +6,14 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Inter', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+
+    --color-surface-900: #0a0a0a;
+    --color-surface-800: #111111;
+    --color-surface-700: #1a1a1a;
+    --color-surface-600: #222222;
+    --color-border: #2a2a2a;
+    --color-accent: #22c55e;
+    --color-accent-hover: #16a34a;
 }
