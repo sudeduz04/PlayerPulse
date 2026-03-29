@@ -17,6 +17,17 @@
             <x-navbar :title="$title ?? ''" />
 
             <main class="flex-1 p-6">
+                @if(session('success'))
+                    <div class="mb-4 p-4 bg-accent/15 border border-accent/30 rounded-lg text-accent text-sm">
+                        {{ session('success') }}
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div class="mb-4 p-4 bg-red-500/15 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
                 {{ $slot }}
             </main>
         </div>

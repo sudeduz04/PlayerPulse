@@ -12,6 +12,8 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        $this->call(PositionSeeder::class);
+
         User::factory()->create([
             'name' => 'Ahmet',
             'surname' => 'Yılmaz',

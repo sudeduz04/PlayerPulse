@@ -31,19 +31,19 @@ class Sidebar extends Component
         return match ($this->role) {
             'coach' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'coach.dashboard', 'url' => route('coach.dashboard'), 'icon' => 'dashboard'],
-                ['label' => 'Oyuncular', 'route' => 'coach.players.*', 'url' => '#', 'icon' => 'users'],
+                ['label' => 'Takımlarım', 'route' => 'coach.teams.*', 'url' => route('coach.teams.index'), 'icon' => 'team'],
+                ['label' => 'Oyuncular', 'route' => 'coach.players.*', 'url' => route('coach.players.index'), 'icon' => 'users'],
                 ['label' => 'Değerlendirme Yap', 'route' => 'coach.evaluations.*', 'url' => '#', 'icon' => 'clipboard'],
                 ['label' => 'Antrenman Ekle', 'route' => 'coach.trainings.*', 'url' => '#', 'icon' => 'dumbbell'],
                 ['label' => 'Maç İstatistikleri', 'route' => 'coach.matches.*', 'url' => '#', 'icon' => 'chart-bar'],
                 ['label' => 'Analizler (AI Panel)', 'route' => 'coach.analysis.*', 'url' => '#', 'icon' => 'brain'],
                 ['label' => 'Kadro Oluştur', 'route' => 'coach.lineups.*', 'url' => '#', 'icon' => 'layout'],
                 ['label' => 'Akıllı Kadro Önerisi', 'route' => 'coach.smart-squad.*', 'url' => '#', 'icon' => 'sparkles'],
-                ['label' => 'Takım Genel Bakış', 'route' => 'coach.team.*', 'url' => '#', 'icon' => 'team'],
             ],
             'manager' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'manager.dashboard', 'url' => route('manager.dashboard'), 'icon' => 'dashboard'],
-                ['label' => 'Oyuncular', 'route' => 'manager.players.*', 'url' => '#', 'icon' => 'users'],
-                ['label' => 'Takım Genel Bakış', 'route' => 'manager.team.*', 'url' => '#', 'icon' => 'team'],
+                ['label' => 'Takımlar', 'route' => 'manager.teams.*', 'url' => route('manager.teams.index'), 'icon' => 'team'],
+                ['label' => 'Oyuncular', 'route' => 'manager.players.*', 'url' => route('manager.players.index'), 'icon' => 'users'],
                 ['label' => 'Oyuncu Yönetimi', 'route' => 'manager.player-management.*', 'url' => '#', 'icon' => 'user-cog'],
                 ['label' => 'Antrenör Yönetimi', 'route' => 'manager.coach-management.*', 'url' => '#', 'icon' => 'user-shield'],
                 ['label' => 'Raporlar', 'route' => 'manager.reports.*', 'url' => '#', 'icon' => 'file-text'],
