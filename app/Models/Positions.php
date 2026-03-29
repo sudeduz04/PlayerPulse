@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Positions extends Model
@@ -14,4 +15,9 @@ class Positions extends Model
         'code',
         'description',
     ];
+
+    public function players(): HasMany
+    {
+        return $this->hasMany(Players::class, 'position_id');
+    }
 }

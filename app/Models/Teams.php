@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Teams extends Model
@@ -15,4 +17,14 @@ class Teams extends Model
         'season',
         'description',
     ];
+
+    public function players(): HasMany
+    {
+        return $this->hasMany(Players::class, 'team_id');
+    }
+
+    public function coaches(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'team_user', 'team_id', 'user_id');
+    }
 }

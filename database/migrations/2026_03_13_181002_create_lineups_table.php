@@ -21,7 +21,7 @@ return new class extends Migration
             $table->boolean('is_ai_generated')->default(false);
 
             $table->timestamps();
-        });;
+        });
     }
 
     /**

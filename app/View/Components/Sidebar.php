@@ -8,7 +8,9 @@ use Illuminate\View\Component;
 class Sidebar extends Component
 {
     public array $navItems;
+
     public string $role;
+
     public string $subtitle;
 
     public function __construct()

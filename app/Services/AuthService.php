@@ -31,11 +31,11 @@ class AuthService
     {
         $user = User::where('email', $data['email'])->first();
 
-        if (!$user || !Hash::check($data['password'], $user->password)) {
+        if (! $user || ! Hash::check($data['password'], $user->password)) {
             return null;
         }
 
-        if (!$user->status) {
+        if (! $user->status) {
             return null;
         }
 

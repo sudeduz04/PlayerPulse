@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -27,6 +28,11 @@ class User extends Authenticatable
     public function isRole(string $role): bool
     {
         return $this->role === $role;
+    }
+
+    public function teams(): BelongsToMany
+    {
+        return $this->belongsToMany(Teams::class, 'team_user', 'user_id', 'team_id');
     }
 
     protected $hidden = [

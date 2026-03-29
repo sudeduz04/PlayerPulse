@@ -20,7 +20,7 @@ class LoginController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()->withErrors([
                 'email' => 'E-posta veya şifre hatalı.',
             ])->onlyInput('email');
@@ -28,7 +28,7 @@ class LoginController extends Controller
 
         $user = Auth::user();
 
-        if (!$user->status) {
+        if (! $user->status) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

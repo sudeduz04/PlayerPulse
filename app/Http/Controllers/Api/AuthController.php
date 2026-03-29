@@ -25,7 +25,7 @@ class AuthController extends BaseController
     {
         $result = $this->authService->login($request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->sendError('Invalid credentials', 401);
         }
 

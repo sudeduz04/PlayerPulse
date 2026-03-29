@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Players extends Model
@@ -24,11 +25,20 @@ class Players extends Model
         'photo',
     ];
 
-    protected function casts()
+    protected function casts(): array
     {
         return [
             'birth_date' => 'date',
-            'status' => 'boolean',
         ];
+    }
+
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Teams::class, 'team_id');
+    }
+
+    public function position(): BelongsTo
+    {
+        return $this->belongsTo(Positions::class, 'position_id');
     }
 }
