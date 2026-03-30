@@ -101,5 +101,41 @@
                 </div>
             </div>
         </div>
+
+        {{-- Player Account Section --}}
+        @if(auth()->user()->isRole('manager') || auth()->user()->isRole('super_admin'))
+            <div class="mt-6 bg-surface-700 border border-border rounded-xl p-6">
+                <h2 class="text-lg font-semibold text-white mb-4">Oyuncu Hesabı</h2>
+
+                @if(session('success'))
+                    <div class="bg-accent/10 border border-accent/30 text-accent px-4 py-3 rounded-lg mb-4 text-sm">
+                        {{ session('success') }}
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">
+                        {{ session('error') }}
+                    </div>
+                @endif
+
+                @if($player->user_id)
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 py-1 text-xs rounded-full bg-accent/15 text-accent">Hesap Mevcut</span>
+                        <span class="text-gray-400 text-sm">{{ $player->user?->email }}</span>
+                    </div>
+                @else
+                    <p class="text-gray-400 text-sm mb-4">Bu oyuncunun henüz bir giriş hesabı yok.</p>
+                    <form method="POST" action="{{ route($routePrefix . '.players.create-account', $player->id) }}">
+                        @csrf
+                        <button type="submit"
+                                onclick="return confirm('Bu oyuncu için hesap oluşturmak istediğinize emin misiniz?')"
+                                class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                            Hesap Oluştur
+                        </button>
+                    </form>
+                @endif
+            </div>
+        @endif
     </div>
 </x-layouts.app>

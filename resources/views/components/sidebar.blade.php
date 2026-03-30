@@ -97,7 +97,7 @@
             </div>
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-white truncate">{{ auth()->user()->name }} {{ auth()->user()->surname }}</p>
-                <p class="text-xs text-gray-500 capitalize">{{ auth()->user()->role }}</p>
+                <p class="text-xs text-gray-500 capitalize">{{ match(auth()->user()->role) { 'super_admin' => 'Süper Yönetici', 'manager' => 'Yönetici', 'coach' => 'Antrenör', 'player' => 'Oyuncu', default => auth()->user()->role } }}</p>
             </div>
         </div>
     </div>

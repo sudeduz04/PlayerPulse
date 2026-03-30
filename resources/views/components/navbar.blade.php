@@ -40,7 +40,7 @@
                     <p class="text-sm font-medium text-white">{{ auth()->user()->name }} {{ auth()->user()->surname }}</p>
                     <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
                     <span class="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-accent/15 text-accent">
-                        {{ auth()->user()->role }}
+                        {{ match(auth()->user()->role) { 'super_admin' => 'Süper Yönetici', 'manager' => 'Yönetici', 'coach' => 'Antrenör', 'player' => 'Oyuncu', default => auth()->user()->role } }}
                     </span>
                 </div>
 

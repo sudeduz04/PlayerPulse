@@ -1,23 +1,186 @@
 <x-layouts.app title="Takım Yönetici Paneli">
     <div>
         <div class="mb-6">
-            <h1 class="text-3xl font-bold text-white">Takım Yönetici Paneli ve Raporlar</h1>
-            <p class="text-gray-500 text-sm mt-1">Kulüp performans ve oyuncu verileri gerçek zamanlı analizleri.</p>
+            <h1 class="text-3xl font-bold text-white">Takım Yönetici Paneli</h1>
+            <p class="text-gray-500 text-sm mt-1">Kulüp performans ve oyuncu verileri genel bakış.</p>
         </div>
 
-        {{-- Placeholder stats --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-surface-700 border border-border rounded-xl p-6">
-                <p class="text-gray-500 text-sm">Aktif Oyuncu Sayısı</p>
-                <p class="text-4xl font-bold text-white mt-2">--</p>
+        {{-- Stats Cards --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-surface-700 border border-border rounded-xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-gray-500 text-xs uppercase tracking-wider">Toplam Takım</p>
+                    <div class="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-white">{{ $totalTeams }}</p>
             </div>
-            <div class="bg-surface-700 border border-border rounded-xl p-6">
-                <p class="text-gray-500 text-sm">Takım Kondisyonu</p>
-                <p class="text-4xl font-bold text-white mt-2">--%</p>
+
+            <div class="bg-surface-700 border border-border rounded-xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-gray-500 text-xs uppercase tracking-wider">Toplam Oyuncu</p>
+                    <div class="w-8 h-8 rounded-lg bg-blue-500/15 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-white">{{ $totalPlayers }}</p>
             </div>
+
+            <div class="bg-surface-700 border border-border rounded-xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-gray-500 text-xs uppercase tracking-wider">Antrenör</p>
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-white">{{ $totalCoaches }}</p>
+            </div>
+
+            <div class="bg-surface-700 border border-border rounded-xl p-5">
+                <div class="flex items-center justify-between mb-3">
+                    <p class="text-gray-500 text-xs uppercase tracking-wider">Sakatlanmış</p>
+                    <div class="w-8 h-8 rounded-lg bg-red-500/15 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    </div>
+                </div>
+                <p class="text-3xl font-bold text-white">{{ $injuredPlayers }}</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {{-- Player Status Distribution --}}
             <div class="bg-surface-700 border border-border rounded-xl p-6">
-                <p class="text-gray-500 text-sm">Performans Trendi</p>
-                <p class="text-xl font-semibold text-accent mt-2">--</p>
+                <h2 class="text-sm font-semibold text-white mb-4">Oyuncu Durum Dağılımı</h2>
+                <div class="space-y-4">
+                    @php
+                        $total = max($totalPlayers, 1);
+                        $activePercent = round(($activePlayers / $total) * 100);
+                        $injuredPercent = round(($injuredPlayers / $total) * 100);
+                        $inactivePercent = round(($inactivePlayers / $total) * 100);
+                    @endphp
+                    <div>
+                        <div class="flex items-center justify-between text-sm mb-1.5">
+                            <span class="text-gray-400">Aktif</span>
+                            <span class="text-accent font-medium">{{ $activePlayers }}</span>
+                        </div>
+                        <div class="h-2 bg-surface-600 rounded-full overflow-hidden">
+                            <div class="h-full bg-accent rounded-full" style="width: {{ $activePercent }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between text-sm mb-1.5">
+                            <span class="text-gray-400">Sakatlanmış</span>
+                            <span class="text-red-400 font-medium">{{ $injuredPlayers }}</span>
+                        </div>
+                        <div class="h-2 bg-surface-600 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-500 rounded-full" style="width: {{ $injuredPercent }}%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between text-sm mb-1.5">
+                            <span class="text-gray-400">Pasif</span>
+                            <span class="text-gray-400 font-medium">{{ $inactivePlayers }}</span>
+                        </div>
+                        <div class="h-2 bg-surface-600 rounded-full overflow-hidden">
+                            <div class="h-full bg-gray-500 rounded-full" style="width: {{ $inactivePercent }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Team Player Distribution Chart --}}
+            <div class="lg:col-span-2 bg-surface-700 border border-border rounded-xl p-6">
+                <h2 class="text-sm font-semibold text-white mb-4">Takım Bazlı Oyuncu Dağılımı</h2>
+                <div class="flex items-end gap-2 h-40">
+                    @foreach($teamPlayerCounts as $team)
+                        @php
+                            $maxCount = $teamPlayerCounts->max('players_count') ?: 1;
+                            $heightPercent = round(($team->players_count / $maxCount) * 100);
+                        @endphp
+                        <div class="flex-1 flex flex-col items-center gap-1">
+                            <span class="text-xs text-gray-400">{{ $team->players_count }}</span>
+                            <div class="w-full bg-accent/20 rounded-t transition-all" style="height: {{ $heightPercent }}%"></div>
+                            <span class="text-[9px] text-gray-500 truncate w-full text-center" title="{{ $team->name }}">{{ \Illuminate\Support\Str::limit($team->name, 6) }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {{-- Recent Teams --}}
+            <div class="bg-surface-700 border border-border rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-border flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-white">Takımlar</h2>
+                    <a href="{{ route('manager.teams.index') }}" class="text-accent hover:text-accent-hover text-xs transition-colors">Tümünü Gör &rarr;</a>
+                </div>
+                <table class="w-full text-sm">
+                    <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
+                        <tr>
+                            <th class="px-4 py-2.5 text-left">Takım</th>
+                            <th class="px-4 py-2.5 text-center">Oyuncu</th>
+                            <th class="px-4 py-2.5 text-center">Antrenör</th>
+                            <th class="px-4 py-2.5 text-left">Kategori</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        @foreach($teams as $team)
+                            <tr class="hover:bg-surface-600 transition-colors">
+                                <td class="px-4 py-3">
+                                    <a href="{{ route('manager.teams.show', $team->id) }}" class="text-white hover:text-accent transition-colors font-medium">{{ $team->name }}</a>
+                                </td>
+                                <td class="px-4 py-3 text-center text-gray-300">{{ $team->players_count }}</td>
+                                <td class="px-4 py-3 text-center text-gray-300">{{ $team->coaches_count }}</td>
+                                <td class="px-4 py-3 text-gray-400 text-xs">{{ $team->age_category }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
+            {{-- Recent Players --}}
+            <div class="bg-surface-700 border border-border rounded-xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-border flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-white">Son Eklenen Oyuncular</h2>
+                    <a href="{{ route('manager.players.index') }}" class="text-accent hover:text-accent-hover text-xs transition-colors">Tümünü Gör &rarr;</a>
+                </div>
+                <table class="w-full text-sm">
+                    <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
+                        <tr>
+                            <th class="px-4 py-2.5 text-left">Oyuncu</th>
+                            <th class="px-4 py-2.5 text-left">Takım</th>
+                            <th class="px-4 py-2.5 text-left">Pozisyon</th>
+                            <th class="px-4 py-2.5 text-center">Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        @foreach($recentPlayers as $player)
+                            <tr class="hover:bg-surface-600 transition-colors">
+                                <td class="px-4 py-3">
+                                    <a href="{{ route('manager.players.show', $player->id) }}" class="text-white hover:text-accent transition-colors font-medium">
+                                        {{ $player->first_name }} {{ $player->last_name }}
+                                    </a>
+                                </td>
+                                <td class="px-4 py-3 text-gray-400 text-xs">{{ $player->team?->name }}</td>
+                                <td class="px-4 py-3 text-gray-400 text-xs">{{ $player->position?->code }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    @switch($player->status)
+                                        @case('active')
+                                            <span class="px-2 py-0.5 text-[10px] rounded-full bg-accent/15 text-accent">Aktif</span>
+                                            @break
+                                        @case('injured')
+                                            <span class="px-2 py-0.5 text-[10px] rounded-full bg-red-500/15 text-red-400">Sakat</span>
+                                            @break
+                                        @case('inactive')
+                                            <span class="px-2 py-0.5 text-[10px] rounded-full bg-gray-500/15 text-gray-400">Pasif</span>
+                                            @break
+                                    @endswitch
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

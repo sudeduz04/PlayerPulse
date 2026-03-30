@@ -5,7 +5,7 @@
                 <h1 class="text-3xl font-bold text-white">Takımlar</h1>
                 <p class="text-gray-500 text-sm mt-1">Tüm takımları görüntüle ve yönet.</p>
             </div>
-            @if(auth()->user()->isRole('manager'))
+            @if(auth()->user()->isRole('super_admin'))
                 <a href="{{ route($routePrefix . '.teams.create') }}"
                    class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
                     + Yeni Takım
@@ -77,9 +77,11 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route($routePrefix . '.teams.show', $team->id) }}"
                                        class="text-accent hover:text-accent-hover text-sm transition-colors">Görüntüle</a>
-                                    <a href="{{ route($routePrefix . '.teams.edit', $team->id) }}"
-                                       class="text-gray-400 hover:text-white text-sm transition-colors">Düzenle</a>
-                                    @if(auth()->user()->isRole('manager'))
+                                    @if(auth()->user()->isRole('manager') || auth()->user()->isRole('super_admin'))
+                                        <a href="{{ route($routePrefix . '.teams.edit', $team->id) }}"
+                                           class="text-gray-400 hover:text-white text-sm transition-colors">Düzenle</a>
+                                    @endif
+                                    @if(auth()->user()->isRole('super_admin'))
                                         <form method="POST" action="{{ route($routePrefix . '.teams.destroy', $team->id) }}" class="inline">
                                             @csrf
                                             @method('DELETE')
