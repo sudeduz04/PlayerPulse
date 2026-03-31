@@ -149,7 +149,7 @@
                                             class="flex-1 px-3 py-2 bg-surface-600 border border-border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
                                         <option value="">Yönetici seçin...</option>
                                         @foreach($managers as $mgr)
-                                            @unless($team->coaches->contains('id', $mgr->id))
+                                            @unless($team->staff->contains('id', $mgr->id))
                                                 <option value="{{ $mgr->id }}">{{ $mgr->name }} {{ $mgr->surname }}</option>
                                             @endunless
                                         @endforeach
@@ -202,7 +202,7 @@
                                             class="flex-1 px-3 py-2 bg-surface-600 border border-border rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
                                         <option value="">Antrenör seçin...</option>
                                         @foreach($coaches as $coach)
-                                            @unless($team->coaches->contains('id', $coach->id))
+                                            @unless($team->staff->contains('id', $coach->id))
                                                 <option value="{{ $coach->id }}">{{ $coach->name }} {{ $coach->surname }}</option>
                                             @endunless
                                         @endforeach
