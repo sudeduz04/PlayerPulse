@@ -22,7 +22,7 @@ class Teams extends Model
     {
         static::deleting(function (Teams $team) {
             $team->players()->delete();
-            $team->coaches()->detach();
+            $team->staff()->detach();
         });
     }
 
@@ -31,8 +31,18 @@ class Teams extends Model
         return $this->hasMany(Players::class, 'team_id');
     }
 
-    public function coaches(): BelongsToMany
+    public function staff(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'team_user', 'team_id', 'user_id');
+    }
+
+    public function coaches(): BelongsToMany
+    {
+        return $this->staff()->where('role', User::ROLE_COACH);
+    }
+
+    public function managers(): BelongsToMany
+    {
+        return $this->staff()->where('role', User::ROLE_MANAGER);
     }
 }

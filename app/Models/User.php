@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -15,6 +16,21 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+
+    const ROLE_SUPER_ADMIN = 'super_admin';
+
+    const ROLE_MANAGER = 'manager';
+
+    const ROLE_COACH = 'coach';
+
+    const ROLE_PLAYER = 'player';
+
+    const ROLES = [
+        self::ROLE_SUPER_ADMIN,
+        self::ROLE_MANAGER,
+        self::ROLE_COACH,
+        self::ROLE_PLAYER,
+    ];
 
     protected $fillable = [
         'name',
@@ -29,6 +45,16 @@ class User extends Authenticatable
     public function isRole(string $role): bool
     {
         return $this->role === $role;
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUPER_ADMIN;
+    }
+
+    public function player(): HasOne
+    {
+        return $this->hasOne(Players::class, 'user_id');
     }
 
     public function teams(): BelongsToMany

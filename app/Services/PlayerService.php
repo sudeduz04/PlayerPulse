@@ -12,7 +12,7 @@ class PlayerService
     {
         $query = Players::with(['team', 'position']);
 
-        if ($user->isRole('coach')) {
+        if ($user->isRole('coach') || $user->isRole('manager')) {
             $teamIds = $user->getTeamIds();
             $query->whereIn('team_id', $teamIds);
         }
@@ -44,17 +44,17 @@ class PlayerService
 
     public function show(int $id, User $user): Players
     {
-        $player = Players::with(['team', 'position'])->findOrFail($id);
+        $player = Players::with(['team', 'position', 'user'])->findOrFail($id);
 
-        $this->authorizeCoach($user, $player);
+        $this->authorizeTeamAccess($user, $player);
 
         return $player;
     }
 
     public function create(array $data, User $user): Players
     {
-        if ($user->isRole('coach')) {
-            $this->authorizeCoachForTeam($user, $data['team_id']);
+        if ($user->isRole('coach') || $user->isRole('manager')) {
+            $this->authorizeForTeam($user, $data['team_id']);
         }
 
         $player = Players::create($data);
@@ -66,11 +66,11 @@ class PlayerService
     {
         $player = Players::findOrFail($id);
 
-        $this->authorizeCoach($user, $player);
+        $this->authorizeTeamAccess($user, $player);
 
         if (isset($data['team_id']) && $data['team_id'] !== $player->team_id) {
-            if ($user->isRole('coach')) {
-                $this->authorizeCoachForTeam($user, $data['team_id']);
+            if ($user->isRole('coach') || $user->isRole('manager')) {
+                $this->authorizeForTeam($user, $data['team_id']);
             }
         }
 
@@ -83,22 +83,22 @@ class PlayerService
     {
         $player = Players::findOrFail($id);
 
-        $this->authorizeCoach($user, $player);
+        $this->authorizeTeamAccess($user, $player);
 
         $player->delete();
     }
 
-    private function authorizeCoach(User $user, Players $player): void
+    private function authorizeTeamAccess(User $user, Players $player): void
     {
-        if ($user->isRole('coach')) {
-            $this->authorizeCoachForTeam($user, $player->team_id);
+        if ($user->isRole('coach') || $user->isRole('manager')) {
+            $this->authorizeForTeam($user, $player->team_id);
         }
     }
 
-    private function authorizeCoachForTeam(User $user, int $teamId): void
+    private function authorizeForTeam(User $user, int $teamId): void
     {
         if (! $user->getTeamIds()->contains($teamId)) {
-            abort(403, 'You are not assigned to this team.');
+            abort(403, 'Bu takıma erişim yetkiniz yok.');
         }
     }
 }

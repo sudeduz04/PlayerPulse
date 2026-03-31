@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Traits\HasRoutePrefix;
 use App\Http\Requests\Web\Team\AssignCoachRequest;
 use App\Http\Requests\Web\Team\StoreTeamRequest;
 use App\Http\Requests\Web\Team\UpdateTeamRequest;
@@ -12,6 +13,8 @@ use Illuminate\Http\Request;
 
 class TeamController extends Controller
 {
+    use HasRoutePrefix;
+
     public function __construct(protected TeamService $teamService) {}
 
     public function index(Request $request)
@@ -29,13 +32,18 @@ class TeamController extends Controller
     {
         $team = $this->teamService->show($id, $request->user());
 
-        $coaches = $request->user()->isRole('manager')
+        $coaches = $request->user()->isRole('super_admin')
             ? User::where('role', 'coach')->get()
+            : collect();
+
+        $managers = $request->user()->isRole('super_admin')
+            ? User::where('role', 'manager')->get()
             : collect();
 
         return view('teams.show', [
             'team' => $team,
             'coaches' => $coaches,
+            'managers' => $managers,
             'routePrefix' => $this->routePrefix(),
         ]);
     }
@@ -52,7 +60,7 @@ class TeamController extends Controller
         $team = $this->teamService->create($request->validated());
 
         return redirect()
-            ->route($this->routePrefix() . '.teams.show', $team->id)
+            ->route($this->routePrefix().'.teams.show', $team->id)
             ->with('success', 'Takım başarıyla oluşturuldu.');
     }
 
@@ -71,7 +79,7 @@ class TeamController extends Controller
         $this->teamService->update($id, $request->validated(), $request->user());
 
         return redirect()
-            ->route($this->routePrefix() . '.teams.show', $id)
+            ->route($this->routePrefix().'.teams.show', $id)
             ->with('success', 'Takım başarıyla güncellendi.');
     }
 
@@ -80,30 +88,26 @@ class TeamController extends Controller
         $this->teamService->delete($id, $request->user());
 
         return redirect()
-            ->route($this->routePrefix() . '.teams.index')
+            ->route($this->routePrefix().'.teams.index')
             ->with('success', 'Takım başarıyla silindi.');
     }
 
-    public function assignCoach(AssignCoachRequest $request, int $teamId)
+    public function assignStaff(AssignCoachRequest $request, int $teamId)
     {
-        $this->teamService->assignCoach($teamId, $request->validated()['user_id']);
+        $this->teamService->assignStaff($teamId, $request->validated()['user_id']);
 
         return redirect()
             ->back()
-            ->with('success', 'Antrenör takıma başarıyla atandı.');
+            ->with('success', 'Kullanıcı takıma başarıyla atandı.');
     }
 
-    public function removeCoach(int $teamId, int $userId)
+    public function removeStaff(int $teamId, int $userId)
     {
-        $this->teamService->removeCoach($teamId, $userId);
+        $this->teamService->removeStaff($teamId, $userId);
 
         return redirect()
             ->back()
-            ->with('success', 'Antrenör takımdan başarıyla çıkarıldı.');
+            ->with('success', 'Kullanıcı takımdan başarıyla çıkarıldı.');
     }
 
-    private function routePrefix(): string
-    {
-        return auth()->user()->isRole('manager') ? 'manager' : 'coach';
-    }
 }

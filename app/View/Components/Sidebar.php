@@ -19,6 +19,7 @@ class Sidebar extends Component
         $this->role = $user->role;
         $this->navItems = $this->getNavItems();
         $this->subtitle = match ($this->role) {
+            'super_admin' => 'System Administration',
             'coach' => 'Tactical Intel - ELITE SCOUTING',
             'manager' => 'Management Center',
             'player' => 'Player Hub',
@@ -29,6 +30,13 @@ class Sidebar extends Component
     private function getNavItems(): array
     {
         return match ($this->role) {
+            'super_admin' => [
+                ['label' => 'Kontrol Paneli', 'route' => 'super_admin.dashboard', 'url' => route('super_admin.dashboard'), 'icon' => 'dashboard'],
+                ['label' => 'divider', 'section' => 'Yönetim'],
+                ['label' => 'Kullanıcılar', 'route' => 'super_admin.users.*', 'url' => route('super_admin.users.index'), 'icon' => 'user-shield'],
+                ['label' => 'Takımlar', 'route' => 'super_admin.teams.*', 'url' => route('super_admin.teams.index'), 'icon' => 'team'],
+                ['label' => 'Oyuncular', 'route' => 'super_admin.players.*', 'url' => route('super_admin.players.index'), 'icon' => 'users'],
+            ],
             'coach' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'coach.dashboard', 'url' => route('coach.dashboard'), 'icon' => 'dashboard'],
                 ['label' => 'Takımlarım', 'route' => 'coach.teams.*', 'url' => route('coach.teams.index'), 'icon' => 'team'],
@@ -42,10 +50,8 @@ class Sidebar extends Component
             ],
             'manager' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'manager.dashboard', 'url' => route('manager.dashboard'), 'icon' => 'dashboard'],
-                ['label' => 'Takımlar', 'route' => 'manager.teams.*', 'url' => route('manager.teams.index'), 'icon' => 'team'],
+                ['label' => 'Takımım', 'route' => 'manager.teams.*', 'url' => route('manager.teams.index'), 'icon' => 'team'],
                 ['label' => 'Oyuncular', 'route' => 'manager.players.*', 'url' => route('manager.players.index'), 'icon' => 'users'],
-                ['label' => 'Oyuncu Yönetimi', 'route' => 'manager.player-management.*', 'url' => '#', 'icon' => 'user-cog'],
-                ['label' => 'Antrenör Yönetimi', 'route' => 'manager.coach-management.*', 'url' => '#', 'icon' => 'user-shield'],
                 ['label' => 'Raporlar', 'route' => 'manager.reports.*', 'url' => '#', 'icon' => 'file-text'],
                 ['label' => 'divider', 'section' => 'Sistem'],
                 ['label' => 'Analizler (AI Panel)', 'route' => 'manager.analysis.*', 'url' => '#', 'icon' => 'brain'],

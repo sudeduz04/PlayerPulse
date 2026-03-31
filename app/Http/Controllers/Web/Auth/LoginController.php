@@ -55,6 +55,7 @@ class LoginController extends Controller
     private function redirectPath(string $role): string
     {
         return match ($role) {
+            'super_admin' => route('super_admin.dashboard'),
             'coach' => route('coach.dashboard'),
             'manager' => route('manager.dashboard'),
             'player' => route('player.dashboard'),

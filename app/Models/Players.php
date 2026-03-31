@@ -11,6 +11,7 @@ class Players extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'user_id',
         'team_id',
         'position_id',
         'first_name',
@@ -40,5 +41,10 @@ class Players extends Model
     public function position(): BelongsTo
     {
         return $this->belongsTo(Positions::class, 'position_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

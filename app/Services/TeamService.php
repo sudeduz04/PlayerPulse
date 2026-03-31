@@ -12,7 +12,7 @@ class TeamService
     {
         $query = Teams::query()->withCount(['players', 'coaches']);
 
-        if ($user->isRole('coach')) {
+        if ($user->isRole('coach') || $user->isRole('manager')) {
             $teamIds = $user->getTeamIds();
             $query->whereIn('id', $teamIds);
         }
@@ -36,9 +36,9 @@ class TeamService
 
     public function show(int $id, User $user): Teams
     {
-        $team = Teams::with(['players.position', 'coaches'])->findOrFail($id);
+        $team = Teams::with(['players.position', 'staff'])->findOrFail($id);
 
-        $this->authorizeCoach($user, $team);
+        $this->authorizeTeamAccess($user, $team);
 
         return $team;
     }
@@ -52,7 +52,7 @@ class TeamService
     {
         $team = Teams::findOrFail($id);
 
-        $this->authorizeCoach($user, $team);
+        $this->authorizeTeamAccess($user, $team);
 
         $team->update($data);
 
@@ -62,32 +62,34 @@ class TeamService
     public function delete(int $id, User $user): void
     {
         if ($user->isRole('coach')) {
-            abort(403, 'Only managers can delete teams.');
+            abort(403, 'Antrenörler takım silemez.');
         }
 
         $team = Teams::findOrFail($id);
 
+        $this->authorizeTeamAccess($user, $team);
+
         $team->delete();
     }
 
-    public function assignCoach(int $teamId, int $userId): void
+    public function assignStaff(int $teamId, int $userId): void
     {
         $team = Teams::findOrFail($teamId);
 
-        $team->coaches()->syncWithoutDetaching([$userId]);
+        $team->staff()->syncWithoutDetaching([$userId]);
     }
 
-    public function removeCoach(int $teamId, int $userId): void
+    public function removeStaff(int $teamId, int $userId): void
     {
         $team = Teams::findOrFail($teamId);
 
-        $team->coaches()->detach($userId);
+        $team->staff()->detach($userId);
     }
 
-    private function authorizeCoach(User $user, Teams $team): void
+    private function authorizeTeamAccess(User $user, Teams $team): void
     {
-        if ($user->isRole('coach') && ! $user->getTeamIds()->contains($team->id)) {
-            abort(403, 'You are not assigned to this team.');
+        if (($user->isRole('coach') || $user->isRole('manager')) && ! $user->getTeamIds()->contains($team->id)) {
+            abort(403, 'Bu takıma erişim yetkiniz yok.');
         }
     }
 }
