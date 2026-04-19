@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\MatchController;
+use App\Http\Controllers\Web\MatchStatsController;
 use App\Http\Controllers\Web\PlayerController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TrainingController;
@@ -49,6 +51,9 @@ Route::middleware('auth')->group(function () {
         Route::resource('trainings', TrainingController::class);
         Route::get('/trainings/{training}/performances', [TrainingPerformanceController::class, 'edit'])->name('trainings.performances.edit');
         Route::put('/trainings/{training}/performances', [TrainingPerformanceController::class, 'update'])->name('trainings.performances.update');
+        Route::resource('matches', MatchController::class);
+        Route::get('/matches/{match}/stats', [MatchStatsController::class, 'edit'])->name('matches.stats.edit');
+        Route::put('/matches/{match}/stats', [MatchStatsController::class, 'update'])->name('matches.stats.update');
     });
 
     // Manager routes
@@ -58,6 +63,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('players', PlayerController::class);
         Route::post('/players/{player}/create-account', [PlayerController::class, 'createAccount'])->name('players.create-account');
         Route::resource('trainings', TrainingController::class)->only(['index', 'show']);
+        Route::resource('matches', MatchController::class)->only(['index', 'show']);
     });
 
     // Player routes

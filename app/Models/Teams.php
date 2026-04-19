@@ -50,4 +50,9 @@ class Teams extends Model
     {
         return $this->hasMany(Trainings::class, 'team_id');
     }
+
+    public function matches(): HasMany
+    {
+        return $this->hasMany(Matches::class, 'team_id');
+    }
 }

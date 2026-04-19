@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MatchController;
+use App\Http\Controllers\Api\MatchStatsController;
 use App\Http\Controllers\Api\PlayerController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TrainingController;
@@ -20,6 +22,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/trainings/{training}/performances', [TrainingPerformanceController::class, 'index']);
         Route::post('/trainings/{training}/performances', [TrainingPerformanceController::class, 'store']);
         Route::post('/trainings/{training}/performances/bulk', [TrainingPerformanceController::class, 'bulkStore']);
+        Route::apiResource('matches', MatchController::class);
+        Route::get('/matches/{match}/stats', [MatchStatsController::class, 'index']);
+        Route::post('/matches/{match}/stats', [MatchStatsController::class, 'store']);
+        Route::post('/matches/{match}/stats/bulk', [MatchStatsController::class, 'bulkStore']);
     });
 
     Route::middleware('role:manager')->group(function () {
