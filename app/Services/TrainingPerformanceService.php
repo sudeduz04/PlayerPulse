@@ -34,7 +34,7 @@ class TrainingPerformanceService
     {
         $this->trainingService->show($trainingId, $user);
 
-        $results = collect();
+        $results = new \Illuminate\Database\Eloquent\Collection();
 
         foreach ($players as $playerData) {
             $performance = PlayerTrainingPerformances::updateOrCreate(
