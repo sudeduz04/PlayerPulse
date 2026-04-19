@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Players extends Model
@@ -46,5 +47,10 @@ class Players extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function trainingPerformances(): HasMany
+    {
+        return $this->hasMany(PlayerTrainingPerformances::class, 'player_id');
     }
 }

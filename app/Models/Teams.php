@@ -45,4 +45,9 @@ class Teams extends Model
     {
         return $this->staff()->where('role', User::ROLE_MANAGER);
     }
+
+    public function trainings(): HasMany
+    {
+        return $this->hasMany(Trainings::class, 'team_id');
+    }
 }

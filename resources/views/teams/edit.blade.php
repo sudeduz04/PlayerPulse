@@ -1,5 +1,5 @@
 <x-layouts.app title="Takım Düzenle">
-    <div class="max-w-2xl">
+    <div>
         <div class="mb-6">
             <a href="{{ route($routePrefix . '.teams.show', $team->id) }}" class="text-gray-500 hover:text-gray-300 text-sm transition-colors mb-2 inline-block">&larr; Takıma Dön</a>
             <h1 class="text-3xl font-bold text-white">Takım Düzenle</h1>

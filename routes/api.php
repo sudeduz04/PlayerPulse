@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PlayerController;
 use App\Http\Controllers\Api\TeamController;
+use App\Http\Controllers\Api\TrainingController;
+use App\Http\Controllers\Api\TrainingPerformanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -14,6 +16,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:manager,coach')->group(function () {
         Route::apiResource('teams', TeamController::class)->only(['index', 'show', 'update']);
         Route::apiResource('players', PlayerController::class);
+        Route::apiResource('trainings', TrainingController::class);
+        Route::get('/trainings/{training}/performances', [TrainingPerformanceController::class, 'index']);
+        Route::post('/trainings/{training}/performances', [TrainingPerformanceController::class, 'store']);
+        Route::post('/trainings/{training}/performances/bulk', [TrainingPerformanceController::class, 'bulkStore']);
     });
 
     Route::middleware('role:manager')->group(function () {

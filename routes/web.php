@@ -4,6 +4,8 @@ use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\PlayerController;
 use App\Http\Controllers\Web\TeamController;
+use App\Http\Controllers\Web\TrainingController;
+use App\Http\Controllers\Web\TrainingPerformanceController;
 use App\Http\Controllers\Web\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +46,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'coach'])->name('dashboard');
         Route::resource('teams', TeamController::class)->only(['index', 'show']);
         Route::resource('players', PlayerController::class);
+        Route::resource('trainings', TrainingController::class);
+        Route::get('/trainings/{training}/performances', [TrainingPerformanceController::class, 'edit'])->name('trainings.performances.edit');
+        Route::put('/trainings/{training}/performances', [TrainingPerformanceController::class, 'update'])->name('trainings.performances.update');
     });
 
     // Manager routes
@@ -52,6 +57,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('teams', TeamController::class)->only(['index', 'show', 'edit', 'update']);
         Route::resource('players', PlayerController::class);
         Route::post('/players/{player}/create-account', [PlayerController::class, 'createAccount'])->name('players.create-account');
+        Route::resource('trainings', TrainingController::class)->only(['index', 'show']);
     });
 
     // Player routes
