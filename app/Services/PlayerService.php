@@ -44,7 +44,10 @@ class PlayerService
 
     public function show(int $id, User $user): Players
     {
-        $player = Players::with(['team', 'position', 'user'])->findOrFail($id);
+        $player = Players::with([
+            'team', 'position', 'user',
+            'injuries', 'physicalMeasurements', 'notes.author', 'developmentReports.creator',
+        ])->findOrFail($id);
 
         $this->authorizeTeamAccess($user, $player);
 

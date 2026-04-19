@@ -58,4 +58,24 @@ class Players extends Model
     {
         return $this->hasMany(PlayerMatchStats::class, 'player_id');
     }
+
+    public function injuries(): HasMany
+    {
+        return $this->hasMany(Injuries::class, 'player_id');
+    }
+
+    public function physicalMeasurements(): HasMany
+    {
+        return $this->hasMany(PhysicalMeasurements::class, 'player_id');
+    }
+
+    public function notes(): HasMany
+    {
+        return $this->hasMany(PlayerNotes::class, 'player_id');
+    }
+
+    public function developmentReports(): HasMany
+    {
+        return $this->hasMany(DevelopmentReports::class, 'player_id');
+    }
 }

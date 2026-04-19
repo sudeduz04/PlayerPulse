@@ -2,9 +2,13 @@
 
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\DevelopmentReportController;
+use App\Http\Controllers\Web\InjuryController;
 use App\Http\Controllers\Web\MatchController;
 use App\Http\Controllers\Web\MatchStatsController;
+use App\Http\Controllers\Web\PhysicalMeasurementController;
 use App\Http\Controllers\Web\PlayerController;
+use App\Http\Controllers\Web\PlayerNoteController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TrainingController;
 use App\Http\Controllers\Web\TrainingPerformanceController;
@@ -41,6 +45,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/teams/{team}/staff/{user}', [TeamController::class, 'removeStaff'])->name('teams.remove-staff');
         Route::resource('players', PlayerController::class);
         Route::post('/players/{player}/create-account', [PlayerController::class, 'createAccount'])->name('players.create-account');
+        Route::post('/players/{player}/injuries', [InjuryController::class, 'store'])->name('players.injuries.store');
+        Route::put('/players/{player}/injuries/{injury}', [InjuryController::class, 'update'])->name('players.injuries.update');
+        Route::delete('/players/{player}/injuries/{injury}', [InjuryController::class, 'destroy'])->name('players.injuries.destroy');
+        Route::post('/players/{player}/measurements', [PhysicalMeasurementController::class, 'store'])->name('players.measurements.store');
+        Route::delete('/players/{player}/measurements/{measurement}', [PhysicalMeasurementController::class, 'destroy'])->name('players.measurements.destroy');
+        Route::post('/players/{player}/notes', [PlayerNoteController::class, 'store'])->name('players.notes.store');
+        Route::delete('/players/{player}/notes/{note}', [PlayerNoteController::class, 'destroy'])->name('players.notes.destroy');
+        Route::post('/players/{player}/reports', [DevelopmentReportController::class, 'store'])->name('players.reports.store');
+        Route::delete('/players/{player}/reports/{report}', [DevelopmentReportController::class, 'destroy'])->name('players.reports.destroy');
     });
 
     // Coach routes
@@ -54,6 +67,17 @@ Route::middleware('auth')->group(function () {
         Route::resource('matches', MatchController::class);
         Route::get('/matches/{match}/stats', [MatchStatsController::class, 'edit'])->name('matches.stats.edit');
         Route::put('/matches/{match}/stats', [MatchStatsController::class, 'update'])->name('matches.stats.update');
+
+        // Player sub-resources
+        Route::post('/players/{player}/injuries', [InjuryController::class, 'store'])->name('players.injuries.store');
+        Route::put('/players/{player}/injuries/{injury}', [InjuryController::class, 'update'])->name('players.injuries.update');
+        Route::delete('/players/{player}/injuries/{injury}', [InjuryController::class, 'destroy'])->name('players.injuries.destroy');
+        Route::post('/players/{player}/measurements', [PhysicalMeasurementController::class, 'store'])->name('players.measurements.store');
+        Route::delete('/players/{player}/measurements/{measurement}', [PhysicalMeasurementController::class, 'destroy'])->name('players.measurements.destroy');
+        Route::post('/players/{player}/notes', [PlayerNoteController::class, 'store'])->name('players.notes.store');
+        Route::delete('/players/{player}/notes/{note}', [PlayerNoteController::class, 'destroy'])->name('players.notes.destroy');
+        Route::post('/players/{player}/reports', [DevelopmentReportController::class, 'store'])->name('players.reports.store');
+        Route::delete('/players/{player}/reports/{report}', [DevelopmentReportController::class, 'destroy'])->name('players.reports.destroy');
     });
 
     // Manager routes
@@ -64,6 +88,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/players/{player}/create-account', [PlayerController::class, 'createAccount'])->name('players.create-account');
         Route::resource('trainings', TrainingController::class)->only(['index', 'show']);
         Route::resource('matches', MatchController::class)->only(['index', 'show']);
+
+        // Player sub-resources
+        Route::post('/players/{player}/injuries', [InjuryController::class, 'store'])->name('players.injuries.store');
+        Route::put('/players/{player}/injuries/{injury}', [InjuryController::class, 'update'])->name('players.injuries.update');
+        Route::delete('/players/{player}/injuries/{injury}', [InjuryController::class, 'destroy'])->name('players.injuries.destroy');
+        Route::post('/players/{player}/measurements', [PhysicalMeasurementController::class, 'store'])->name('players.measurements.store');
+        Route::delete('/players/{player}/measurements/{measurement}', [PhysicalMeasurementController::class, 'destroy'])->name('players.measurements.destroy');
+        Route::post('/players/{player}/notes', [PlayerNoteController::class, 'store'])->name('players.notes.store');
+        Route::delete('/players/{player}/notes/{note}', [PlayerNoteController::class, 'destroy'])->name('players.notes.destroy');
+        Route::post('/players/{player}/reports', [DevelopmentReportController::class, 'store'])->name('players.reports.store');
+        Route::delete('/players/{player}/reports/{report}', [DevelopmentReportController::class, 'destroy'])->name('players.reports.destroy');
     });
 
     // Player routes
