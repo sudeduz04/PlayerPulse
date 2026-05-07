@@ -50,14 +50,14 @@ class TeamController extends BaseController
 
     public function assignCoach(AssignCoachRequest $request, int $teamId): JsonResponse
     {
-        $this->teamService->assignCoach($teamId, $request->validated()['user_id']);
+        $this->teamService->assignStaff($teamId, $request->validated()['user_id']);
 
         return $this->sendResponse(null, 'Coach assigned to team successfully.');
     }
 
     public function removeCoach(int $teamId, int $userId): JsonResponse
     {
-        $this->teamService->removeCoach($teamId, $userId);
+        $this->teamService->removeStaff($teamId, $userId);
 
         return $this->sendResponse(null, 'Coach removed from team successfully.');
     }

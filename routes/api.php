@@ -13,9 +13,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::middleware('role:manager,coach')->group(function () {
+    Route::middleware('role:super_admin,manager,coach')->group(function () {
         Route::apiResource('teams', TeamController::class)->only(['index', 'show', 'update']);
         Route::apiResource('players', PlayerController::class);
         Route::apiResource('trainings', TrainingController::class);
@@ -28,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/matches/{match}/stats/bulk', [MatchStatsController::class, 'bulkStore']);
     });
 
-    Route::middleware('role:manager')->group(function () {
+    Route::middleware('role:super_admin,manager')->group(function () {
         Route::post('/teams', [TeamController::class, 'store']);
         Route::delete('/teams/{team}', [TeamController::class, 'destroy']);
         Route::post('/teams/{team}/coaches', [TeamController::class, 'assignCoach']);

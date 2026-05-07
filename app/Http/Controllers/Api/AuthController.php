@@ -32,6 +32,11 @@ class AuthController extends BaseController
         return $this->sendResponse($result, 'Login successful');
     }
 
+    public function me(Request $request): JsonResponse
+    {
+        return $this->sendResponse($request->user(), 'Authenticated user retrieved successfully');
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request->user());
