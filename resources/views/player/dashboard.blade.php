@@ -101,6 +101,64 @@
                 </div>
             </div>
 
+            {{-- Match Stats --}}
+            <div class="bg-surface-700 border border-border rounded-xl overflow-hidden mb-6">
+                <div class="px-6 py-4 border-b border-border flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-white">Maç Performansım</h2>
+                    <a href="{{ route('player.matches.index') }}" class="text-accent hover:text-accent-hover text-sm transition-colors">Tümünü Gör</a>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 p-6 border-b border-border">
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Maç</p>
+                        <p class="text-2xl font-bold text-white">{{ $matchSummary['total_matches'] }}</p>
+                    </div>
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">İlk 11</p>
+                        <p class="text-2xl font-bold text-accent">{{ $matchSummary['starts'] }}</p>
+                    </div>
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Gol</p>
+                        <p class="text-2xl font-bold text-blue-400">{{ $matchSummary['goals'] }}</p>
+                    </div>
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Asist</p>
+                        <p class="text-2xl font-bold text-purple-400">{{ $matchSummary['assists'] }}</p>
+                    </div>
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Puan</p>
+                        <p class="text-2xl font-bold text-yellow-400">{{ $matchSummary['average_rating'] ?? '-' }}</p>
+                    </div>
+                </div>
+                <table class="w-full text-sm">
+                    <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
+                        <tr>
+                            <th class="px-4 py-2.5 text-left">Rakip</th>
+                            <th class="px-4 py-2.5 text-left">Tarih</th>
+                            <th class="px-4 py-2.5 text-center">Dk</th>
+                            <th class="px-4 py-2.5 text-center">Gol</th>
+                            <th class="px-4 py-2.5 text-center">Asist</th>
+                            <th class="px-4 py-2.5 text-center">Puan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        @forelse($recentMatchStats as $stat)
+                            <tr class="hover:bg-surface-600 transition-colors">
+                                <td class="px-4 py-3 text-white font-medium">{{ $stat->match?->opponent_team ?? '-' }}</td>
+                                <td class="px-4 py-3 text-gray-400">{{ $stat->match?->match_date?->format('d.m.Y') ?? '-' }}</td>
+                                <td class="px-4 py-3 text-center text-gray-300">{{ $stat->minutes_played }}</td>
+                                <td class="px-4 py-3 text-center text-white">{{ $stat->goals }}</td>
+                                <td class="px-4 py-3 text-center text-gray-300">{{ $stat->assists }}</td>
+                                <td class="px-4 py-3 text-center text-accent font-bold">{{ $stat->match_rating ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">Henüz maç istatistiği bulunmuyor.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
             {{-- Recent Trainings --}}
             <div class="bg-surface-700 border border-border rounded-xl overflow-hidden mb-6">
                 <div class="px-6 py-4 border-b border-border flex items-center justify-between">

@@ -5,7 +5,7 @@
                 <h1 class="text-3xl font-bold text-white">Maçlar</h1>
                 <p class="text-gray-500 text-sm mt-1">Maç programlarını görüntüle ve yönet.</p>
             </div>
-            @if(auth()->user()->isRole('coach'))
+            @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
                 <a href="{{ route($routePrefix . '.matches.create') }}"
                    class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
                     + Yeni Maç
@@ -99,7 +99,7 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route($routePrefix . '.matches.show', $match->id) }}"
                                        class="text-accent hover:text-accent-hover text-sm transition-colors">Görüntüle</a>
-                                    @if(auth()->user()->isRole('coach'))
+                                    @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
                                         <a href="{{ route($routePrefix . '.matches.edit', $match->id) }}"
                                            class="text-gray-400 hover:text-white text-sm transition-colors">Düzenle</a>
                                         <form method="POST" action="{{ route($routePrefix . '.matches.destroy', $match->id) }}" class="inline">

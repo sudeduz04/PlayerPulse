@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\MatchController;
 use App\Http\Controllers\Web\MatchStatsController;
 use App\Http\Controllers\Web\PhysicalMeasurementController;
 use App\Http\Controllers\Web\PlayerController;
+use App\Http\Controllers\Web\PlayerMatchHistoryController;
 use App\Http\Controllers\Web\PlayerNoteController;
 use App\Http\Controllers\Web\PlayerReportController;
 use App\Http\Controllers\Web\PlayerTrainingHistoryController;
@@ -48,9 +49,12 @@ Route::middleware('auth')->group(function () {
         Route::delete('/teams/{team}/staff/{user}', [TeamController::class, 'removeStaff'])->name('teams.remove-staff');
         Route::resource('players', PlayerController::class);
         Route::resource('trainings', TrainingController::class);
+        Route::resource('matches', MatchController::class);
         Route::resource('evaluations', EvaluationController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
         Route::get('/trainings/{training}/performances', [TrainingPerformanceController::class, 'edit'])->name('trainings.performances.edit');
         Route::put('/trainings/{training}/performances', [TrainingPerformanceController::class, 'update'])->name('trainings.performances.update');
+        Route::get('/matches/{match}/stats', [MatchStatsController::class, 'edit'])->name('matches.stats.edit');
+        Route::put('/matches/{match}/stats', [MatchStatsController::class, 'update'])->name('matches.stats.update');
         Route::post('/players/{player}/create-account', [PlayerController::class, 'createAccount'])->name('players.create-account');
         Route::post('/players/{player}/injuries', [InjuryController::class, 'store'])->name('players.injuries.store');
         Route::put('/players/{player}/injuries/{injury}', [InjuryController::class, 'update'])->name('players.injuries.update');
@@ -113,6 +117,7 @@ Route::middleware('auth')->group(function () {
     // Player routes
     Route::middleware('role:player')->prefix('player')->name('player.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'player'])->name('dashboard');
+        Route::get('/matches', [PlayerMatchHistoryController::class, 'index'])->name('matches.index');
         Route::get('/trainings', [PlayerTrainingHistoryController::class, 'index'])->name('trainings.index');
         Route::get('/reports', [PlayerReportController::class, 'index'])->name('reports.index');
     });

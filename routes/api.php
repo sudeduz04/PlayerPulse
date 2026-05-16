@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\DevelopmentReportController;
 use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\MatchStatsController;
 use App\Http\Controllers\Api\PlayerController;
+use App\Http\Controllers\Api\PlayerMatchHistoryController;
 use App\Http\Controllers\Api\PlayerTrainingHistoryController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TrainingController;
@@ -19,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::middleware('role:player')->group(function () {
+        Route::get('/my/matches', [PlayerMatchHistoryController::class, 'index']);
         Route::get('/my/trainings', [PlayerTrainingHistoryController::class, 'index']);
         Route::get('/my/reports', [DevelopmentReportController::class, 'myReports']);
     });

@@ -38,6 +38,7 @@ class Sidebar extends Component
                 ['label' => 'Oyuncular', 'route' => 'super_admin.players.*', 'url' => route('super_admin.players.index'), 'icon' => 'users'],
                 ['label' => 'Değerlendirmeler', 'route' => 'super_admin.evaluations.*', 'url' => route('super_admin.evaluations.index'), 'icon' => 'clipboard'],
                 ['label' => 'Antrenmanlar', 'route' => 'super_admin.trainings.*', 'url' => route('super_admin.trainings.index'), 'icon' => 'dumbbell'],
+                ['label' => 'Maçlar', 'route' => 'super_admin.matches.*', 'url' => route('super_admin.matches.index'), 'icon' => 'chart-bar'],
             ],
             'coach' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'coach.dashboard', 'url' => route('coach.dashboard'), 'icon' => 'dashboard'],
@@ -62,7 +63,7 @@ class Sidebar extends Component
             ],
             'player' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'player.dashboard', 'url' => route('player.dashboard'), 'icon' => 'dashboard'],
-                ['label' => 'Performansım', 'route' => 'player.performance.*', 'url' => '#', 'icon' => 'activity'],
+                ['label' => 'Performansım', 'route' => 'player.matches.*', 'url' => route('player.matches.index'), 'icon' => 'activity'],
                 ['label' => 'Gelişim Raporlarım', 'route' => 'player.reports.*', 'url' => route('player.reports.index'), 'icon' => 'trending-up'],
                 ['label' => 'Antrenman Geçmişi', 'route' => 'player.trainings.*', 'url' => route('player.trainings.index'), 'icon' => 'calendar'],
             ],

@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Players;
 use App\Models\Teams;
 use App\Models\User;
+use App\Services\MatchStatsService;
 use App\Services\TrainingPerformanceService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function __construct(private TrainingPerformanceService $performanceService) {}
+    public function __construct(
+        private TrainingPerformanceService $performanceService,
+        private MatchStatsService $matchStatsService,
+    ) {}
 
     public function superAdmin(Request $request)
     {
@@ -146,11 +150,31 @@ class DashboardController extends Controller
             ? $this->performanceService->recentHistoryForPlayer($user, 5)
             : collect();
 
+        $matchSummary = $player
+            ? $this->matchStatsService->summaryForPlayer($user)
+            : [
+                'total_matches' => 0,
+                'starts' => 0,
+                'minutes' => 0,
+                'goals' => 0,
+                'assists' => 0,
+                'average_rating' => null,
+                'average_pass_accuracy' => null,
+                'yellow_cards' => 0,
+                'red_cards' => 0,
+            ];
+
+        $recentMatchStats = $player
+            ? $this->matchStatsService->recentHistoryForPlayer($user, 5)
+            : collect();
+
         return view('player.dashboard', compact(
             'player',
             'teamPlayers',
             'trainingSummary',
             'recentTrainingPerformances',
+            'matchSummary',
+            'recentMatchStats',
         ));
     }
 }
