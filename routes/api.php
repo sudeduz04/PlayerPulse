@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PhysicalMeasurementController;
 use App\Http\Controllers\Api\PlayerController;
 use App\Http\Controllers\Api\PlayerHealthController;
 use App\Http\Controllers\Api\PlayerMatchHistoryController;
+use App\Http\Controllers\Api\PlayerNoteController;
 use App\Http\Controllers\Api\PlayerTrainingHistoryController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TrainingController;
@@ -62,5 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/players/{player}/measurements', [PhysicalMeasurementController::class, 'store']);
         Route::put('/physical-measurements/{measurement}', [PhysicalMeasurementController::class, 'update']);
         Route::delete('/physical-measurements/{measurement}', [PhysicalMeasurementController::class, 'destroy']);
+        Route::get('/players/{player}/notes', [PlayerNoteController::class, 'index']);
+        Route::post('/players/{player}/notes', [PlayerNoteController::class, 'store']);
+        Route::delete('/notes/{note}', [PlayerNoteController::class, 'destroy']);
     });
 });

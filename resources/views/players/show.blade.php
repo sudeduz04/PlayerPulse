@@ -458,6 +458,51 @@
             </div>
         </div>
 
+        {{-- Development Charts Section --}}
+        <div class="mt-6 bg-surface-700 border border-border rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-border flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-white">Gelişim Grafikleri</h2>
+                <button onclick="document.getElementById('progressCharts').classList.toggle('hidden')"
+                        class="text-accent hover:text-accent-hover text-sm transition-colors">Göster / Gizle</button>
+            </div>
+            <div id="progressCharts" class="hidden p-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-surface-600/40 border border-border rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-200 mb-3">Gelişim Raporu Trendi</h3>
+                        @if(!empty($chartData['development']['categories']))
+                            <div id="chart-development"></div>
+                        @else
+                            <div class="text-gray-500 text-sm py-12 text-center">Henüz gelişim raporu yok.</div>
+                        @endif
+                    </div>
+                    <div class="bg-surface-600/40 border border-border rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-200 mb-3">Maç Performans Trendi</h3>
+                        @if(!empty($chartData['matches']['categories']))
+                            <div id="chart-matches"></div>
+                        @else
+                            <div class="text-gray-500 text-sm py-12 text-center">Henüz maç istatistiği yok.</div>
+                        @endif
+                    </div>
+                    <div class="bg-surface-600/40 border border-border rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-200 mb-3">Antrenman Performans Trendi</h3>
+                        @if(!empty($chartData['trainings']['categories']))
+                            <div id="chart-trainings"></div>
+                        @else
+                            <div class="text-gray-500 text-sm py-12 text-center">Henüz antrenman performansı yok.</div>
+                        @endif
+                    </div>
+                    <div class="bg-surface-600/40 border border-border rounded-lg p-4">
+                        <h3 class="text-sm font-medium text-gray-200 mb-3">Fiziksel Ölçüm Trendi</h3>
+                        @if(!empty($chartData['measurements']['categories']))
+                            <div id="chart-measurements"></div>
+                        @else
+                            <div class="text-gray-500 text-sm py-12 text-center">Henüz fiziksel ölçüm yok.</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Player Account Section --}}
         @if(auth()->user()->isRole('manager') || auth()->user()->isRole('super_admin'))
             <div class="mt-6 bg-surface-700 border border-border rounded-xl p-6">
@@ -481,4 +526,70 @@
             </div>
         @endif
     </div>
+
+    <script>
+        window.playerProgressData = @json($chartData);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.ApexCharts === 'undefined') return;
+            const d = window.playerProgressData || {};
+
+            const baseOpts = {
+                chart: { type: 'line', height: 320, background: 'transparent', toolbar: { show: false } },
+                theme: { mode: 'dark' },
+                stroke: { curve: 'smooth', width: 2 },
+                grid: { borderColor: '#2a2a2a' },
+                legend: { labels: { colors: '#9ca3af' } },
+                tooltip: { theme: 'dark' },
+                markers: { size: 3 },
+                dataLabels: { enabled: false },
+            };
+            const axisStyle = { labels: { style: { colors: '#9ca3af' } } };
+
+            if (d.development && d.development.categories && d.development.categories.length) {
+                new ApexCharts(document.querySelector('#chart-development'), {
+                    ...baseOpts,
+                    series: d.development.series,
+                    xaxis: { categories: d.development.categories, ...axisStyle },
+                    yaxis: { min: 0, max: 10, ...axisStyle },
+                    colors: ['#22d3ee', '#a78bfa', '#f472b6', '#facc15', '#34d399'],
+                }).render();
+            }
+
+            if (d.matches && d.matches.categories && d.matches.categories.length) {
+                new ApexCharts(document.querySelector('#chart-matches'), {
+                    ...baseOpts,
+                    series: d.matches.series,
+                    xaxis: { categories: d.matches.categories, ...axisStyle },
+                    yaxis: [
+                        { seriesName: 'Maç Puanı', title: { text: 'Puan / Sayı', style: { color: '#9ca3af' } }, ...axisStyle },
+                        { seriesName: 'Pas İsabeti %', opposite: true, min: 0, max: 100, title: { text: 'Pas %', style: { color: '#9ca3af' } }, ...axisStyle },
+                        { seriesName: 'Gol', show: false },
+                        { seriesName: 'Asist', show: false },
+                    ],
+                    colors: ['#34d399', '#22d3ee', '#facc15', '#f472b6'],
+                }).render();
+            }
+
+            if (d.trainings && d.trainings.categories && d.trainings.categories.length) {
+                new ApexCharts(document.querySelector('#chart-trainings'), {
+                    ...baseOpts,
+                    series: d.trainings.series,
+                    xaxis: { categories: d.trainings.categories, ...axisStyle },
+                    yaxis: { min: 0, max: 10, ...axisStyle },
+                    colors: ['#34d399', '#22d3ee', '#a78bfa', '#facc15', '#f472b6'],
+                }).render();
+            }
+
+            if (d.measurements && d.measurements.categories && d.measurements.categories.length) {
+                new ApexCharts(document.querySelector('#chart-measurements'), {
+                    ...baseOpts,
+                    series: d.measurements.series,
+                    xaxis: { categories: d.measurements.categories, ...axisStyle },
+                    yaxis: { ...axisStyle },
+                    colors: ['#22d3ee', '#a78bfa', '#f472b6', '#facc15', '#34d399', '#fb923c', '#60a5fa'],
+                }).render();
+            }
+        });
+    </script>
 </x-layouts.app>

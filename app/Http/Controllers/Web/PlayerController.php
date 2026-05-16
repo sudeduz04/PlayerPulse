@@ -9,6 +9,7 @@ use App\Http\Requests\Web\Player\UpdatePlayerRequest;
 use App\Models\Positions;
 use App\Models\Teams;
 use App\Models\User;
+use App\Services\PlayerProgressService;
 use App\Services\PlayerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,7 +19,10 @@ class PlayerController extends Controller
 {
     use HasRoutePrefix;
 
-    public function __construct(protected PlayerService $playerService) {}
+    public function __construct(
+        protected PlayerService $playerService,
+        protected PlayerProgressService $progressService,
+    ) {}
 
     public function index(Request $request)
     {
@@ -40,6 +44,7 @@ class PlayerController extends Controller
         return view('players.show', [
             'player' => $player,
             'routePrefix' => $this->routePrefix(),
+            'chartData' => $this->progressService->buildChartData($player),
         ]);
     }
 
