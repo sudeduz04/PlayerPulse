@@ -66,6 +66,7 @@ class Sidebar extends Component
                 ['label' => 'Performansım', 'route' => 'player.matches.*', 'url' => route('player.matches.index'), 'icon' => 'activity'],
                 ['label' => 'Gelişim Raporlarım', 'route' => 'player.reports.*', 'url' => route('player.reports.index'), 'icon' => 'trending-up'],
                 ['label' => 'Antrenman Geçmişi', 'route' => 'player.trainings.*', 'url' => route('player.trainings.index'), 'icon' => 'calendar'],
+                ['label' => 'Sağlık & Ölçümler', 'route' => 'player.health.*', 'url' => route('player.health.index'), 'icon' => 'file-text'],
             ],
             default => [],
         };

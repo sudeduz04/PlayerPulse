@@ -159,6 +159,35 @@
                 </table>
             </div>
 
+            {{-- Health & Measurements --}}
+            <div class="bg-surface-700 border border-border rounded-xl overflow-hidden mb-6">
+                <div class="px-6 py-4 border-b border-border flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-white">Sağlık & Fiziksel Ölçümler</h2>
+                    <a href="{{ route('player.health.index') }}" class="text-accent hover:text-accent-hover text-sm transition-colors">Detayları Gör</a>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-6">
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Aktif Sakatlık</p>
+                        <p class="text-2xl font-bold text-red-400">{{ $injurySummary['ongoing'] }}</p>
+                    </div>
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Kilo</p>
+                        <p class="text-2xl font-bold text-blue-400">{{ $measurementSummary['latest_weight'] ?? '-' }}</p>
+                        <p class="text-gray-500 text-[10px]">kg</p>
+                    </div>
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Sprint</p>
+                        <p class="text-2xl font-bold text-accent">{{ $measurementSummary['best_sprint_time'] ?? '-' }}</p>
+                        <p class="text-gray-500 text-[10px]">en iyi sn</p>
+                    </div>
+                    <div class="bg-surface-600 rounded-lg p-4 text-center">
+                        <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Dayanıklılık</p>
+                        <p class="text-2xl font-bold text-purple-400">{{ $measurementSummary['average_endurance'] ?? '-' }}</p>
+                        <p class="text-gray-500 text-[10px]">ortalama</p>
+                    </div>
+                </div>
+            </div>
+
             {{-- Recent Trainings --}}
             <div class="bg-surface-700 border border-border rounded-xl overflow-hidden mb-6">
                 <div class="px-6 py-4 border-b border-border flex items-center justify-between">

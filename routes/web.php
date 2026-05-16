@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\MatchController;
 use App\Http\Controllers\Web\MatchStatsController;
 use App\Http\Controllers\Web\PhysicalMeasurementController;
 use App\Http\Controllers\Web\PlayerController;
+use App\Http\Controllers\Web\PlayerHealthController;
 use App\Http\Controllers\Web\PlayerMatchHistoryController;
 use App\Http\Controllers\Web\PlayerNoteController;
 use App\Http\Controllers\Web\PlayerReportController;
@@ -117,6 +118,7 @@ Route::middleware('auth')->group(function () {
     // Player routes
     Route::middleware('role:player')->prefix('player')->name('player.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'player'])->name('dashboard');
+        Route::get('/health', [PlayerHealthController::class, 'index'])->name('health.index');
         Route::get('/matches', [PlayerMatchHistoryController::class, 'index'])->name('matches.index');
         Route::get('/trainings', [PlayerTrainingHistoryController::class, 'index'])->name('trainings.index');
         Route::get('/reports', [PlayerReportController::class, 'index'])->name('reports.index');

@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Players;
 use App\Models\Teams;
 use App\Models\User;
+use App\Services\InjuryService;
 use App\Services\MatchStatsService;
+use App\Services\PhysicalMeasurementService;
 use App\Services\TrainingPerformanceService;
 use Illuminate\Http\Request;
 
@@ -15,6 +17,8 @@ class DashboardController extends Controller
     public function __construct(
         private TrainingPerformanceService $performanceService,
         private MatchStatsService $matchStatsService,
+        private InjuryService $injuryService,
+        private PhysicalMeasurementService $measurementService,
     ) {}
 
     public function superAdmin(Request $request)
@@ -168,6 +172,28 @@ class DashboardController extends Controller
             ? $this->matchStatsService->recentHistoryForPlayer($user, 5)
             : collect();
 
+        $injurySummary = $player
+            ? $this->injuryService->summaryForPlayer($user)
+            : [
+                'total_injuries' => 0,
+                'ongoing' => 0,
+                'recovered' => 0,
+                'latest_injury' => null,
+            ];
+
+        $measurementSummary = $player
+            ? $this->measurementService->summaryForPlayer($user)
+            : [
+                'total_measurements' => 0,
+                'latest_measurement' => null,
+                'latest_height' => null,
+                'latest_weight' => null,
+                'latest_body_fat_percentage' => null,
+                'best_sprint_time' => null,
+                'average_endurance' => null,
+                'average_strength' => null,
+            ];
+
         return view('player.dashboard', compact(
             'player',
             'teamPlayers',
@@ -175,6 +201,8 @@ class DashboardController extends Controller
             'recentTrainingPerformances',
             'matchSummary',
             'recentMatchStats',
+            'injurySummary',
+            'measurementSummary',
         ));
     }
 }
