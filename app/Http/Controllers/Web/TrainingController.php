@@ -86,6 +86,10 @@ class TrainingController extends Controller
 
     private function getTeamsForUser($user)
     {
+        if ($user->isSuperAdmin()) {
+            return Teams::all();
+        }
+
         return Teams::whereIn('id', $user->getTeamIds())->get();
     }
 }

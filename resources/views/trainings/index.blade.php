@@ -5,7 +5,7 @@
                 <h1 class="text-3xl font-bold text-white">Antrenmanlar</h1>
                 <p class="text-gray-500 text-sm mt-1">Antrenman programlarını görüntüle ve yönet.</p>
             </div>
-            @if(auth()->user()->isRole('coach'))
+            @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
                 <a href="{{ route($routePrefix . '.trainings.create') }}"
                    class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
                     + Yeni Antrenman
@@ -83,7 +83,7 @@
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route($routePrefix . '.trainings.show', $training->id) }}"
                                        class="text-accent hover:text-accent-hover text-sm transition-colors">Görüntüle</a>
-                                    @if(auth()->user()->isRole('coach'))
+                                    @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
                                         <a href="{{ route($routePrefix . '.trainings.edit', $training->id) }}"
                                            class="text-gray-400 hover:text-white text-sm transition-colors">Düzenle</a>
                                         <form method="POST" action="{{ route($routePrefix . '.trainings.destroy', $training->id) }}" class="inline">

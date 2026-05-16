@@ -36,6 +36,7 @@ class Sidebar extends Component
                 ['label' => 'Kullanıcılar', 'route' => 'super_admin.users.*', 'url' => route('super_admin.users.index'), 'icon' => 'user-shield'],
                 ['label' => 'Takımlar', 'route' => 'super_admin.teams.*', 'url' => route('super_admin.teams.index'), 'icon' => 'team'],
                 ['label' => 'Oyuncular', 'route' => 'super_admin.players.*', 'url' => route('super_admin.players.index'), 'icon' => 'users'],
+                ['label' => 'Antrenmanlar', 'route' => 'super_admin.trainings.*', 'url' => route('super_admin.trainings.index'), 'icon' => 'dumbbell'],
             ],
             'coach' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'coach.dashboard', 'url' => route('coach.dashboard'), 'icon' => 'dashboard'],
@@ -62,7 +63,7 @@ class Sidebar extends Component
                 ['label' => 'Kontrol Paneli', 'route' => 'player.dashboard', 'url' => route('player.dashboard'), 'icon' => 'dashboard'],
                 ['label' => 'Performansım', 'route' => 'player.performance.*', 'url' => '#', 'icon' => 'activity'],
                 ['label' => 'Gelişim Raporlarım', 'route' => 'player.reports.*', 'url' => '#', 'icon' => 'trending-up'],
-                ['label' => 'Antrenman Geçmişi', 'route' => 'player.trainings.*', 'url' => '#', 'icon' => 'calendar'],
+                ['label' => 'Antrenman Geçmişi', 'route' => 'player.trainings.*', 'url' => route('player.trainings.index'), 'icon' => 'calendar'],
             ],
             default => [],
         };

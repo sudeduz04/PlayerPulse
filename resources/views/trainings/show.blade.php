@@ -7,7 +7,7 @@
                 <h1 class="text-3xl font-bold text-white">{{ $training->title }}</h1>
                 <p class="text-gray-500 text-sm mt-1">{{ $training->team?->name }} &middot; {{ $training->training_date?->format('d.m.Y') }}</p>
             </div>
-            @if(auth()->user()->isRole('coach'))
+            @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
                 <div class="flex items-center gap-2">
                     <a href="{{ route($routePrefix . '.trainings.performances.edit', $training->id) }}"
                        class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
@@ -79,7 +79,7 @@
         <div class="bg-surface-700 border border-border rounded-xl overflow-hidden">
             <div class="px-6 py-4 border-b border-border flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-white">Oyuncu Performansları ({{ $training->performances->count() }})</h2>
-                @if(auth()->user()->isRole('coach'))
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
                     <a href="{{ route($routePrefix . '.trainings.performances.edit', $training->id) }}"
                        class="text-accent hover:text-accent-hover text-sm transition-colors">Düzenle &rarr;</a>
                 @endif

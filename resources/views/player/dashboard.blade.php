@@ -74,28 +74,75 @@
                         </div>
                     </div>
 
-                    {{-- Placeholder Stats --}}
+                    {{-- Training Stats --}}
                     <div class="mt-6 pt-6 border-t border-border">
-                        <h3 class="text-sm font-semibold text-white mb-3">İstatistikler</h3>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-semibold text-white">Antrenman İstatistikleri</h3>
+                            <a href="{{ route('player.trainings.index') }}" class="text-accent hover:text-accent-hover text-xs transition-colors">Geçmişi Gör</a>
+                        </div>
                         <div class="grid grid-cols-3 gap-4">
                             <div class="bg-surface-600 rounded-lg p-4 text-center">
-                                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Antrenman Katılımı</p>
-                                <p class="text-2xl font-bold text-accent">--</p>
-                                <p class="text-gray-500 text-[10px]">Yakında aktif olacak</p>
+                                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Katılım</p>
+                                <p class="text-2xl font-bold text-accent">%{{ $trainingSummary['attendance_rate'] }}</p>
+                                <p class="text-gray-500 text-[10px]">{{ $trainingSummary['attended'] }}/{{ $trainingSummary['total_trainings'] }} antrenman</p>
                             </div>
                             <div class="bg-surface-600 rounded-lg p-4 text-center">
-                                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Maç Sayısı</p>
-                                <p class="text-2xl font-bold text-blue-400">--</p>
-                                <p class="text-gray-500 text-[10px]">Yakında aktif olacak</p>
+                                <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Devamsızlık</p>
+                                <p class="text-2xl font-bold text-blue-400">{{ $trainingSummary['absent'] }}</p>
+                                <p class="text-gray-500 text-[10px]">{{ $trainingSummary['excused'] }} izinli</p>
                             </div>
                             <div class="bg-surface-600 rounded-lg p-4 text-center">
                                 <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Genel Puan</p>
-                                <p class="text-2xl font-bold text-purple-400">--</p>
-                                <p class="text-gray-500 text-[10px]">Yakında aktif olacak</p>
+                                <p class="text-2xl font-bold text-purple-400">{{ $trainingSummary['average_score'] ?? '-' }}</p>
+                                <p class="text-gray-500 text-[10px]">ortalama</p>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {{-- Recent Trainings --}}
+            <div class="bg-surface-700 border border-border rounded-xl overflow-hidden mb-6">
+                <div class="px-6 py-4 border-b border-border flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-white">Son Antrenmanlarım</h2>
+                    <a href="{{ route('player.trainings.index') }}" class="text-accent hover:text-accent-hover text-sm transition-colors">Tümünü Gör</a>
+                </div>
+                <table class="w-full text-sm">
+                    <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
+                        <tr>
+                            <th class="px-4 py-2.5 text-left">Antrenman</th>
+                            <th class="px-4 py-2.5 text-left">Tarih</th>
+                            <th class="px-4 py-2.5 text-center">Katılım</th>
+                            <th class="px-4 py-2.5 text-center">Puan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-border">
+                        @forelse($recentTrainingPerformances as $performance)
+                            <tr class="hover:bg-surface-600 transition-colors">
+                                <td class="px-4 py-3 text-white font-medium">{{ $performance->training?->title ?? '-' }}</td>
+                                <td class="px-4 py-3 text-gray-400">{{ $performance->training?->training_date?->format('d.m.Y') ?? '-' }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    @switch($performance->attendance_status)
+                                        @case('attended')
+                                            <span class="px-2 py-0.5 text-[10px] rounded-full bg-accent/15 text-accent">Katıldı</span>
+                                            @break
+                                        @case('absent')
+                                            <span class="px-2 py-0.5 text-[10px] rounded-full bg-red-500/15 text-red-400">Gelmedi</span>
+                                            @break
+                                        @case('excused')
+                                            <span class="px-2 py-0.5 text-[10px] rounded-full bg-yellow-500/15 text-yellow-400">İzinli</span>
+                                            @break
+                                    @endswitch
+                                </td>
+                                <td class="px-4 py-3 text-center text-white">{{ $performance->performance_score ?? '-' }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="px-6 py-8 text-center text-gray-500">Henüz antrenman kaydı bulunmuyor.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
 
             {{-- Teammates --}}

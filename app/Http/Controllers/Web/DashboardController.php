@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Players;
 use App\Models\Teams;
 use App\Models\User;
+use App\Services\TrainingPerformanceService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
+    public function __construct(private TrainingPerformanceService $performanceService) {}
+
     public function superAdmin(Request $request)
     {
         $totalTeams = Teams::count();
@@ -128,6 +131,26 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
-        return view('player.dashboard', compact('player', 'teamPlayers'));
+        $trainingSummary = $player
+            ? $this->performanceService->summaryForPlayer($user)
+            : [
+                'total_trainings' => 0,
+                'attended' => 0,
+                'absent' => 0,
+                'excused' => 0,
+                'attendance_rate' => 0.0,
+                'average_score' => null,
+            ];
+
+        $recentTrainingPerformances = $player
+            ? $this->performanceService->recentHistoryForPlayer($user, 5)
+            : collect();
+
+        return view('player.dashboard', compact(
+            'player',
+            'teamPlayers',
+            'trainingSummary',
+            'recentTrainingPerformances',
+        ));
     }
 }

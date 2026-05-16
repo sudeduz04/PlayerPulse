@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\MatchStatsController;
 use App\Http\Controllers\Api\PlayerController;
+use App\Http\Controllers\Api\PlayerTrainingHistoryController;
 use App\Http\Controllers\Api\TeamController;
 use App\Http\Controllers\Api\TrainingController;
 use App\Http\Controllers\Api\TrainingPerformanceController;
@@ -15,6 +16,10 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::middleware('role:player')->group(function () {
+        Route::get('/my/trainings', [PlayerTrainingHistoryController::class, 'index']);
+    });
 
     Route::middleware('role:super_admin,manager,coach')->group(function () {
         Route::apiResource('teams', TeamController::class)->only(['index', 'show', 'update']);
