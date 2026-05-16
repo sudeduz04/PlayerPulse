@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\Web\AiAnalysisController;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DevelopmentReportController;
 use App\Http\Controllers\Web\EvaluationController;
 use App\Http\Controllers\Web\InjuryController;
+use App\Http\Controllers\Web\LineupController;
 use App\Http\Controllers\Web\MatchController;
 use App\Http\Controllers\Web\MatchStatsController;
 use App\Http\Controllers\Web\PhysicalMeasurementController;
@@ -14,6 +16,7 @@ use App\Http\Controllers\Web\PlayerMatchHistoryController;
 use App\Http\Controllers\Web\PlayerNoteController;
 use App\Http\Controllers\Web\PlayerReportController;
 use App\Http\Controllers\Web\PlayerTrainingHistoryController;
+use App\Http\Controllers\Web\SmartLineupController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TrainingController;
 use App\Http\Controllers\Web\TrainingPerformanceController;
@@ -91,6 +94,20 @@ Route::middleware('auth')->group(function () {
         Route::delete('/players/{player}/notes/{note}', [PlayerNoteController::class, 'destroy'])->name('players.notes.destroy');
         Route::post('/players/{player}/reports', [DevelopmentReportController::class, 'store'])->name('players.reports.store');
         Route::delete('/players/{player}/reports/{report}', [DevelopmentReportController::class, 'destroy'])->name('players.reports.destroy');
+
+        // Lineup builder
+        Route::resource('lineups', LineupController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
+
+        // AI smart lineup
+        Route::get('/smart-squad', [SmartLineupController::class, 'create'])->name('smart-squad.create');
+        Route::post('/smart-squad', [SmartLineupController::class, 'store'])->name('smart-squad.store');
+
+        // AI analysis panel
+        Route::get('/analysis', [AiAnalysisController::class, 'index'])->name('analysis.index');
+        Route::get('/analysis/create', [AiAnalysisController::class, 'create'])->name('analysis.create');
+        Route::post('/analysis', [AiAnalysisController::class, 'store'])->name('analysis.store');
+        Route::get('/analysis/{analysis}', [AiAnalysisController::class, 'show'])->name('analysis.show');
+        Route::delete('/analysis/{analysis}', [AiAnalysisController::class, 'destroy'])->name('analysis.destroy');
     });
 
     // Manager routes
@@ -113,6 +130,10 @@ Route::middleware('auth')->group(function () {
         Route::delete('/players/{player}/notes/{note}', [PlayerNoteController::class, 'destroy'])->name('players.notes.destroy');
         Route::post('/players/{player}/reports', [DevelopmentReportController::class, 'store'])->name('players.reports.store');
         Route::delete('/players/{player}/reports/{report}', [DevelopmentReportController::class, 'destroy'])->name('players.reports.destroy');
+
+        // AI analysis (read-only for manager)
+        Route::get('/analysis', [AiAnalysisController::class, 'index'])->name('analysis.index');
+        Route::get('/analysis/{analysis}', [AiAnalysisController::class, 'show'])->name('analysis.show');
     });
 
     // Player routes

@@ -47,9 +47,9 @@ class Sidebar extends Component
                 ['label' => 'Değerlendirme Yap', 'route' => 'coach.evaluations.*', 'url' => route('coach.evaluations.index'), 'icon' => 'clipboard'],
                 ['label' => 'Antrenmanlar', 'route' => 'coach.trainings.*', 'url' => route('coach.trainings.index'), 'icon' => 'dumbbell'],
                 ['label' => 'Maçlar', 'route' => 'coach.matches.*', 'url' => route('coach.matches.index'), 'icon' => 'chart-bar'],
-                ['label' => 'Analizler (AI Panel)', 'route' => 'coach.analysis.*', 'url' => '#', 'icon' => 'brain'],
-                ['label' => 'Kadro Oluştur', 'route' => 'coach.lineups.*', 'url' => '#', 'icon' => 'layout'],
-                ['label' => 'Akıllı Kadro Önerisi', 'route' => 'coach.smart-squad.*', 'url' => '#', 'icon' => 'sparkles'],
+                ['label' => 'Analizler (AI Panel)', 'route' => 'coach.analysis.*', 'url' => route('coach.analysis.index'), 'icon' => 'brain'],
+                ['label' => 'Kadro Oluştur', 'route' => 'coach.lineups.*', 'url' => route('coach.lineups.index'), 'icon' => 'layout'],
+                ['label' => 'Akıllı Kadro Önerisi', 'route' => 'coach.smart-squad.*', 'url' => route('coach.smart-squad.create'), 'icon' => 'sparkles'],
             ],
             'manager' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'manager.dashboard', 'url' => route('manager.dashboard'), 'icon' => 'dashboard'],
@@ -59,7 +59,7 @@ class Sidebar extends Component
                 ['label' => 'Maçlar', 'route' => 'manager.matches.*', 'url' => route('manager.matches.index'), 'icon' => 'chart-bar'],
                 ['label' => 'Raporlar', 'route' => 'manager.evaluations.*', 'url' => route('manager.evaluations.index'), 'icon' => 'file-text'],
                 ['label' => 'divider', 'section' => 'Sistem'],
-                ['label' => 'Analizler (AI Panel)', 'route' => 'manager.analysis.*', 'url' => '#', 'icon' => 'brain'],
+                ['label' => 'Analizler (AI Panel)', 'route' => 'manager.analysis.*', 'url' => route('manager.analysis.index'), 'icon' => 'brain'],
             ],
             'player' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'player.dashboard', 'url' => route('player.dashboard'), 'icon' => 'dashboard'],
