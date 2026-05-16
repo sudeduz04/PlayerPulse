@@ -14,7 +14,7 @@ class RegisterRequest extends ApiFormRequest
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'phone' => 'nullable|string|max:20',
-            'role' => 'required|in:player,coach,manager',
+            'role' => 'prohibited',
         ];
     }
 }

@@ -3,12 +3,17 @@
 namespace App\Services;
 
 use App\Models\PlayerMatchStats;
+use App\Models\Players;
 use App\Models\User;
+use App\Services\Authorization\TeamAccess;
 use Illuminate\Database\Eloquent\Collection;
 
 class MatchStatsService
 {
-    public function __construct(protected MatchService $matchService) {}
+    public function __construct(
+        protected MatchService $matchService,
+        private TeamAccess $teamAccess
+    ) {}
 
     public function listByMatch(int $matchId, User $user): Collection
     {
@@ -19,7 +24,9 @@ class MatchStatsService
 
     public function upsert(int $matchId, array $data, User $user): PlayerMatchStats
     {
-        $this->matchService->show($matchId, $user);
+        $match = $this->matchService->show($matchId, $user);
+        $player = Players::findOrFail($data['player_id']);
+        $this->teamAccess->assertMatchPlayer($match, $player);
 
         return PlayerMatchStats::updateOrCreate(
             [
@@ -32,11 +39,14 @@ class MatchStatsService
 
     public function bulkUpsert(int $matchId, array $players, User $user): Collection
     {
-        $this->matchService->show($matchId, $user);
+        $match = $this->matchService->show($matchId, $user);
 
         $results = new Collection;
 
         foreach ($players as $playerData) {
+            $player = Players::findOrFail($playerData['player_id']);
+            $this->teamAccess->assertMatchPlayer($match, $player);
+
             $stat = PlayerMatchStats::updateOrCreate(
                 [
                     'match_id' => $matchId,

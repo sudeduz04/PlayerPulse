@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/matches/{match}/stats/bulk', [MatchStatsController::class, 'bulkStore']);
     });
 
-    Route::middleware('role:super_admin,manager')->group(function () {
+    Route::middleware('role:super_admin')->group(function () {
         Route::post('/teams', [TeamController::class, 'store']);
         Route::delete('/teams/{team}', [TeamController::class, 'destroy']);
         Route::post('/teams/{team}/coaches', [TeamController::class, 'assignCoach']);

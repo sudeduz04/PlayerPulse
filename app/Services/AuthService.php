@@ -15,8 +15,8 @@ class AuthService
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'password' => $data['password'],
+            'role' => User::ROLE_PLAYER,
         ]);
-        $user->role = $data['role'];
         $user->save();
 
         $token = $user->createToken('auth_token')->plainTextToken;

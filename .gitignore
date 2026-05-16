@@ -6,4 +6,5 @@ screen2.png
 screen3.png
 node_modules
 .phpunit.result.cache
+*.md
 

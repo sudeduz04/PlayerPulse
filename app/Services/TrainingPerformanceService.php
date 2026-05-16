@@ -2,13 +2,18 @@
 
 namespace App\Services;
 
+use App\Models\Players;
 use App\Models\PlayerTrainingPerformances;
 use App\Models\User;
+use App\Services\Authorization\TeamAccess;
 use Illuminate\Support\Collection;
 
 class TrainingPerformanceService
 {
-    public function __construct(protected TrainingService $trainingService) {}
+    public function __construct(
+        protected TrainingService $trainingService,
+        private TeamAccess $teamAccess
+    ) {}
 
     public function listByTraining(int $trainingId, User $user): Collection
     {
@@ -19,7 +24,9 @@ class TrainingPerformanceService
 
     public function upsert(int $trainingId, array $data, User $user): PlayerTrainingPerformances
     {
-        $this->trainingService->show($trainingId, $user);
+        $training = $this->trainingService->show($trainingId, $user);
+        $player = Players::findOrFail($data['player_id']);
+        $this->teamAccess->assertTrainingPlayer($training, $player);
 
         return PlayerTrainingPerformances::updateOrCreate(
             [
@@ -32,11 +39,14 @@ class TrainingPerformanceService
 
     public function bulkUpsert(int $trainingId, array $players, User $user): Collection
     {
-        $this->trainingService->show($trainingId, $user);
+        $training = $this->trainingService->show($trainingId, $user);
 
-        $results = new \Illuminate\Database\Eloquent\Collection();
+        $results = new \Illuminate\Database\Eloquent\Collection;
 
         foreach ($players as $playerData) {
+            $player = Players::findOrFail($playerData['player_id']);
+            $this->teamAccess->assertTrainingPlayer($training, $player);
+
             $performance = PlayerTrainingPerformances::updateOrCreate(
                 [
                     'training_id' => $trainingId,

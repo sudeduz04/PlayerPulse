@@ -4,16 +4,23 @@ namespace App\Services;
 
 use App\Models\Matches;
 use App\Models\User;
+use App\Services\Authorization\TeamAccess;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class MatchService
 {
+    public function __construct(private TeamAccess $teamAccess) {}
+
     public function list(array $filters, User $user): LengthAwarePaginator
     {
         $query = Matches::with(['team']);
 
-        if ($user->isRole('coach') || $user->isRole('manager')) {
+        if ($user->isRole(User::ROLE_COACH) || $user->isRole(User::ROLE_MANAGER)) {
             $query->whereIn('team_id', $user->getTeamIds());
+        }
+
+        if ($user->isRole(User::ROLE_PLAYER)) {
+            $query->where('team_id', $user->player?->team_id);
         }
 
         if (! empty($filters['team_id'])) {
@@ -45,15 +52,21 @@ class MatchService
     {
         $match = Matches::with(['team', 'playerMatchStats'])->findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $match);
+        $this->teamAccess->assertTeam($user, $match->team_id);
 
         return $match;
     }
 
     public function create(array $data, User $user): Matches
     {
-        if ($user->isRole('coach') || $user->isRole('manager')) {
-            $this->authorizeForTeam($user, $data['team_id']);
+        abort_unless(
+            $user->isSuperAdmin() || $user->isRole(User::ROLE_COACH),
+            403,
+            'Bu işlem için antrenör veya süper yönetici yetkisi gerekir.'
+        );
+
+        if ($user->isRole(User::ROLE_COACH)) {
+            $this->teamAccess->assertTeam($user, (int) $data['team_id']);
         }
 
         $match = Matches::create($data);
@@ -63,13 +76,19 @@ class MatchService
 
     public function update(int $id, array $data, User $user): Matches
     {
+        abort_unless(
+            $user->isSuperAdmin() || $user->isRole(User::ROLE_COACH),
+            403,
+            'Bu işlem için antrenör veya süper yönetici yetkisi gerekir.'
+        );
+
         $match = Matches::findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $match);
+        $this->teamAccess->assertTeam($user, $match->team_id);
 
-        if (isset($data['team_id']) && $data['team_id'] !== $match->team_id) {
-            if ($user->isRole('coach') || $user->isRole('manager')) {
-                $this->authorizeForTeam($user, $data['team_id']);
+        if (isset($data['team_id']) && (int) $data['team_id'] !== $match->team_id) {
+            if ($user->isRole(User::ROLE_COACH)) {
+                $this->teamAccess->assertTeam($user, (int) $data['team_id']);
             }
         }
 
@@ -80,24 +99,16 @@ class MatchService
 
     public function delete(int $id, User $user): void
     {
+        abort_unless(
+            $user->isSuperAdmin() || $user->isRole(User::ROLE_COACH),
+            403,
+            'Bu işlem için antrenör veya süper yönetici yetkisi gerekir.'
+        );
+
         $match = Matches::findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $match);
+        $this->teamAccess->assertTeam($user, $match->team_id);
 
         $match->delete();
-    }
-
-    private function authorizeTeamAccess(User $user, Matches $match): void
-    {
-        if ($user->isRole('coach') || $user->isRole('manager')) {
-            $this->authorizeForTeam($user, $match->team_id);
-        }
-    }
-
-    private function authorizeForTeam(User $user, int $teamId): void
-    {
-        if (! $user->getTeamIds()->contains($teamId)) {
-            abort(403, 'Bu takıma erişim yetkiniz yok.');
-        }
     }
 }

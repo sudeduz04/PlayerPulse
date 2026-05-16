@@ -4,17 +4,19 @@ namespace App\Services;
 
 use App\Models\Teams;
 use App\Models\User;
+use App\Services\Authorization\TeamAccess;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class TeamService
 {
+    public function __construct(private TeamAccess $teamAccess) {}
+
     public function list(array $filters, User $user): LengthAwarePaginator
     {
         $query = Teams::query()->withCount(['players', 'coaches']);
 
-        if ($user->isRole('coach') || $user->isRole('manager')) {
-            $teamIds = $user->getTeamIds();
-            $query->whereIn('id', $teamIds);
+        if ($user->isRole(User::ROLE_COACH) || $user->isRole(User::ROLE_MANAGER)) {
+            $query->whereIn('id', $user->getTeamIds());
         }
 
         if (! empty($filters['age_category'])) {
@@ -38,7 +40,7 @@ class TeamService
     {
         $team = Teams::with(['players.position', 'staff'])->findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $team);
+        $this->teamAccess->assertTeam($user, $team);
 
         return $team;
     }
@@ -52,7 +54,7 @@ class TeamService
     {
         $team = Teams::findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $team);
+        $this->teamAccess->assertTeam($user, $team);
 
         $team->update($data);
 
@@ -61,13 +63,11 @@ class TeamService
 
     public function delete(int $id, User $user): void
     {
-        if ($user->isRole('coach')) {
-            abort(403, 'Antrenörler takım silemez.');
-        }
+        abort_unless($user->isSuperAdmin(), 403, 'Sadece süper yöneticiler takım silebilir.');
 
         $team = Teams::findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $team);
+        $this->teamAccess->assertTeam($user, $team);
 
         $team->delete();
     }
@@ -75,6 +75,13 @@ class TeamService
     public function assignStaff(int $teamId, int $userId): void
     {
         $team = Teams::findOrFail($teamId);
+        $user = User::findOrFail($userId);
+
+        abort_unless(
+            $user->isRole(User::ROLE_COACH) || $user->isRole(User::ROLE_MANAGER),
+            422,
+            'Takıma yalnızca antrenör veya yönetici atanabilir.'
+        );
 
         $team->staff()->syncWithoutDetaching([$userId]);
     }
@@ -84,12 +91,5 @@ class TeamService
         $team = Teams::findOrFail($teamId);
 
         $team->staff()->detach($userId);
-    }
-
-    private function authorizeTeamAccess(User $user, Teams $team): void
-    {
-        if (($user->isRole('coach') || $user->isRole('manager')) && ! $user->getTeamIds()->contains($team->id)) {
-            abort(403, 'Bu takıma erişim yetkiniz yok.');
-        }
     }
 }

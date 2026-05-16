@@ -109,5 +109,4 @@ class TeamController extends Controller
             ->back()
             ->with('success', 'Kullanıcı takımdan başarıyla çıkarıldı.');
     }
-
 }

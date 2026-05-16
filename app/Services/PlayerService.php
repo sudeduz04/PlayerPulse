@@ -4,17 +4,23 @@ namespace App\Services;
 
 use App\Models\Players;
 use App\Models\User;
+use App\Services\Authorization\TeamAccess;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class PlayerService
 {
+    public function __construct(private TeamAccess $teamAccess) {}
+
     public function list(array $filters, User $user): LengthAwarePaginator
     {
         $query = Players::with(['team', 'position']);
 
-        if ($user->isRole('coach') || $user->isRole('manager')) {
-            $teamIds = $user->getTeamIds();
-            $query->whereIn('team_id', $teamIds);
+        if ($user->isRole(User::ROLE_COACH) || $user->isRole(User::ROLE_MANAGER)) {
+            $query->whereIn('team_id', $user->getTeamIds());
+        }
+
+        if ($user->isRole(User::ROLE_PLAYER)) {
+            $query->where('user_id', $user->id);
         }
 
         if (! empty($filters['team_id'])) {
@@ -49,15 +55,17 @@ class PlayerService
             'injuries', 'physicalMeasurements', 'notes.author', 'developmentReports.creator',
         ])->findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $player);
+        $this->teamAccess->assertPlayer($user, $player);
 
         return $player;
     }
 
     public function create(array $data, User $user): Players
     {
-        if ($user->isRole('coach') || $user->isRole('manager')) {
-            $this->authorizeForTeam($user, $data['team_id']);
+        abort_if($user->isRole(User::ROLE_PLAYER), 403, 'Oyuncular oyuncu kaydı yönetemez.');
+
+        if ($user->isRole(User::ROLE_COACH) || $user->isRole(User::ROLE_MANAGER)) {
+            $this->teamAccess->assertTeam($user, (int) $data['team_id']);
         }
 
         $player = Players::create($data);
@@ -67,13 +75,15 @@ class PlayerService
 
     public function update(int $id, array $data, User $user): Players
     {
+        abort_if($user->isRole(User::ROLE_PLAYER), 403, 'Oyuncular oyuncu kaydı yönetemez.');
+
         $player = Players::findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $player);
+        $this->teamAccess->assertPlayer($user, $player);
 
-        if (isset($data['team_id']) && $data['team_id'] !== $player->team_id) {
-            if ($user->isRole('coach') || $user->isRole('manager')) {
-                $this->authorizeForTeam($user, $data['team_id']);
+        if (isset($data['team_id']) && (int) $data['team_id'] !== $player->team_id) {
+            if ($user->isRole(User::ROLE_COACH) || $user->isRole(User::ROLE_MANAGER)) {
+                $this->teamAccess->assertTeam($user, (int) $data['team_id']);
             }
         }
 
@@ -84,24 +94,12 @@ class PlayerService
 
     public function delete(int $id, User $user): void
     {
+        abort_if($user->isRole(User::ROLE_PLAYER), 403, 'Oyuncular oyuncu kaydı yönetemez.');
+
         $player = Players::findOrFail($id);
 
-        $this->authorizeTeamAccess($user, $player);
+        $this->teamAccess->assertPlayer($user, $player);
 
         $player->delete();
-    }
-
-    private function authorizeTeamAccess(User $user, Players $player): void
-    {
-        if ($user->isRole('coach') || $user->isRole('manager')) {
-            $this->authorizeForTeam($user, $player->team_id);
-        }
-    }
-
-    private function authorizeForTeam(User $user, int $teamId): void
-    {
-        if (! $user->getTeamIds()->contains($teamId)) {
-            abort(403, 'Bu takıma erişim yetkiniz yok.');
-        }
     }
 }

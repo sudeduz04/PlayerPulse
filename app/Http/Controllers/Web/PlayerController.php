@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Traits\HasRoutePrefix;
 use App\Http\Requests\Web\Player\StorePlayerRequest;
 use App\Http\Requests\Web\Player\UpdatePlayerRequest;
-use App\Models\Players;
 use App\Models\Positions;
 use App\Models\Teams;
 use App\Models\User;
@@ -94,7 +93,13 @@ class PlayerController extends Controller
 
     public function createAccount(Request $request, int $playerId)
     {
-        $player = Players::findOrFail($playerId);
+        abort_unless(
+            $request->user()->isSuperAdmin() || $request->user()->isRole(User::ROLE_MANAGER),
+            403,
+            'Bu işlem için yönetici yetkisi gerekir.'
+        );
+
+        $player = $this->playerService->show($playerId, $request->user());
 
         if ($player->user_id) {
             return redirect()->back()->with('error', 'Bu oyuncunun zaten bir hesabı var.');
@@ -124,5 +129,4 @@ class PlayerController extends Controller
 
         return Teams::whereIn('id', $user->getTeamIds())->get();
     }
-
 }
