@@ -24,8 +24,8 @@ class PlayerHealthController extends BaseController
         ]);
 
         return $this->sendResponse([
-            'injury_summary' => $this->injuryService->summaryForPlayer($request->user()),
-            'measurement_summary' => $this->measurementService->summaryForPlayer($request->user()),
+            'injury_summary' => $this->injuryService->summaryForPlayer($request->user(), $filters),
+            'measurement_summary' => $this->measurementService->summaryForPlayer($request->user(), $filters),
             'injuries' => $this->injuryService->listForCurrentPlayer($request->user(), $filters),
             'measurements' => $this->measurementService->listForCurrentPlayer($request->user(), $filters),
         ], 'Player health data retrieved successfully.');

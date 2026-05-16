@@ -71,7 +71,7 @@ class PhysicalMeasurementService
         $measurement->delete();
     }
 
-    public function summaryForPlayer(User $user): array
+    public function summaryForPlayer(User $user, array $filters = []): array
     {
         abort_unless($user->isRole(User::ROLE_PLAYER), 403, 'Bu işlem yalnızca oyuncular içindir.');
 
@@ -79,7 +79,7 @@ class PhysicalMeasurementService
             return $this->emptySummary();
         }
 
-        return $this->summary(['player_id' => $user->player->id], $user);
+        return $this->summary(array_merge($filters, ['player_id' => $user->player->id]), $user);
     }
 
     public function summary(array $filters, User $user): array

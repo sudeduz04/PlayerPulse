@@ -17,8 +17,8 @@ class PlayerHealthController extends Controller
     public function index(Request $request)
     {
         return view('player.health.index', [
-            'injurySummary' => $this->injuryService->summaryForPlayer($request->user()),
-            'measurementSummary' => $this->measurementService->summaryForPlayer($request->user()),
+            'injurySummary' => $this->injuryService->summaryForPlayer($request->user(), $request->query()),
+            'measurementSummary' => $this->measurementService->summaryForPlayer($request->user(), $request->query()),
             'injuries' => $this->injuryService->listForCurrentPlayer($request->user(), $request->query()),
             'measurements' => $this->measurementService->listForCurrentPlayer($request->user(), $request->query()),
             'filters' => $request->query(),
