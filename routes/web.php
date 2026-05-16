@@ -3,12 +3,14 @@
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DevelopmentReportController;
+use App\Http\Controllers\Web\EvaluationController;
 use App\Http\Controllers\Web\InjuryController;
 use App\Http\Controllers\Web\MatchController;
 use App\Http\Controllers\Web\MatchStatsController;
 use App\Http\Controllers\Web\PhysicalMeasurementController;
 use App\Http\Controllers\Web\PlayerController;
 use App\Http\Controllers\Web\PlayerNoteController;
+use App\Http\Controllers\Web\PlayerReportController;
 use App\Http\Controllers\Web\PlayerTrainingHistoryController;
 use App\Http\Controllers\Web\TeamController;
 use App\Http\Controllers\Web\TrainingController;
@@ -46,6 +48,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/teams/{team}/staff/{user}', [TeamController::class, 'removeStaff'])->name('teams.remove-staff');
         Route::resource('players', PlayerController::class);
         Route::resource('trainings', TrainingController::class);
+        Route::resource('evaluations', EvaluationController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
         Route::get('/trainings/{training}/performances', [TrainingPerformanceController::class, 'edit'])->name('trainings.performances.edit');
         Route::put('/trainings/{training}/performances', [TrainingPerformanceController::class, 'update'])->name('trainings.performances.update');
         Route::post('/players/{player}/create-account', [PlayerController::class, 'createAccount'])->name('players.create-account');
@@ -65,6 +68,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'coach'])->name('dashboard');
         Route::resource('teams', TeamController::class)->only(['index', 'show']);
         Route::resource('players', PlayerController::class);
+        Route::resource('evaluations', EvaluationController::class)->only(['index', 'create', 'store', 'show', 'destroy']);
         Route::resource('trainings', TrainingController::class);
         Route::get('/trainings/{training}/performances', [TrainingPerformanceController::class, 'edit'])->name('trainings.performances.edit');
         Route::put('/trainings/{training}/performances', [TrainingPerformanceController::class, 'update'])->name('trainings.performances.update');
@@ -90,6 +94,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('teams', TeamController::class)->only(['index', 'show', 'edit', 'update']);
         Route::resource('players', PlayerController::class);
         Route::post('/players/{player}/create-account', [PlayerController::class, 'createAccount'])->name('players.create-account');
+        Route::resource('evaluations', EvaluationController::class)->only(['index', 'show']);
         Route::resource('trainings', TrainingController::class)->only(['index', 'show']);
         Route::resource('matches', MatchController::class)->only(['index', 'show']);
 
@@ -109,5 +114,6 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:player')->prefix('player')->name('player.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'player'])->name('dashboard');
         Route::get('/trainings', [PlayerTrainingHistoryController::class, 'index'])->name('trainings.index');
+        Route::get('/reports', [PlayerReportController::class, 'index'])->name('reports.index');
     });
 });

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DevelopmentReportController;
 use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\MatchStatsController;
 use App\Http\Controllers\Api\PlayerController;
@@ -19,6 +20,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:player')->group(function () {
         Route::get('/my/trainings', [PlayerTrainingHistoryController::class, 'index']);
+        Route::get('/my/reports', [DevelopmentReportController::class, 'myReports']);
     });
 
     Route::middleware('role:super_admin,manager,coach')->group(function () {
@@ -32,6 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/matches/{match}/stats', [MatchStatsController::class, 'index']);
         Route::post('/matches/{match}/stats', [MatchStatsController::class, 'store']);
         Route::post('/matches/{match}/stats/bulk', [MatchStatsController::class, 'bulkStore']);
+        Route::get('/development-reports', [DevelopmentReportController::class, 'index']);
+        Route::get('/development-reports/{report}', [DevelopmentReportController::class, 'show']);
     });
 
     Route::middleware('role:super_admin')->group(function () {
@@ -39,5 +43,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/teams/{team}', [TeamController::class, 'destroy']);
         Route::post('/teams/{team}/coaches', [TeamController::class, 'assignCoach']);
         Route::delete('/teams/{team}/coaches/{user}', [TeamController::class, 'removeCoach']);
+    });
+
+    Route::middleware('role:super_admin,coach')->group(function () {
+        Route::post('/players/{player}/reports', [DevelopmentReportController::class, 'store']);
+        Route::delete('/development-reports/{report}', [DevelopmentReportController::class, 'destroy']);
     });
 });

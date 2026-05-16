@@ -303,9 +303,12 @@
         <div class="mt-6 bg-surface-700 border border-border rounded-xl overflow-hidden">
             <div class="px-6 py-4 border-b border-border flex items-center justify-between">
                 <h2 class="text-lg font-semibold text-white">Gelişim Raporları ({{ $player->developmentReports->count() }})</h2>
-                <button onclick="document.getElementById('reportForm').classList.toggle('hidden')"
-                        class="text-accent hover:text-accent-hover text-sm transition-colors">+ Yeni Rapor</button>
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
+                    <button onclick="document.getElementById('reportForm').classList.toggle('hidden')"
+                            class="text-accent hover:text-accent-hover text-sm transition-colors">+ Yeni Rapor</button>
+                @endif
             </div>
+            @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
             <div id="reportForm" class="hidden p-4 border-b border-border bg-surface-600/50">
                 <form method="POST" action="{{ route($routePrefix . '.players.reports.store', $player->id) }}">
                     @csrf
@@ -360,6 +363,7 @@
                     </div>
                 </form>
             </div>
+            @endif
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
