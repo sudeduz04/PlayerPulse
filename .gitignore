@@ -5,6 +5,7 @@ screen.png
 screen2.png
 screen3.png
 node_modules
+vendor
 .phpunit.result.cache
 *.md
 .env
