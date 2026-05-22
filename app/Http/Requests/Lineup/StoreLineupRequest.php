@@ -15,6 +15,9 @@ class StoreLineupRequest extends ApiFormRequest
             'players' => ['required', 'array', 'size:11'],
             'players.*.player_id' => ['required', 'integer', 'exists:players,id', 'distinct'],
             'players.*.position_id' => ['required', 'integer', 'exists:positions,id'],
+            'players.*.slot_key' => ['nullable', 'string', 'max:20'],
+            'players.*.field_x' => ['nullable', 'integer', 'between:0,100'],
+            'players.*.field_y' => ['nullable', 'integer', 'between:0,100'],
         ];
     }
 
