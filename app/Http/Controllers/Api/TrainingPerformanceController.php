@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Training\BulkPerformanceRequest;
 use App\Http\Requests\Training\StorePerformanceRequest;
+use App\Jobs\ProcessBulkPerformanceJob;
 use App\Services\TrainingPerformanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class TrainingPerformanceController extends BaseController
 {
@@ -28,9 +31,29 @@ class TrainingPerformanceController extends BaseController
 
     public function bulkStore(BulkPerformanceRequest $request, int $trainingId): JsonResponse
     {
+        $players = $request->validated()['players'];
+
+        if ($request->boolean('async') && count($players) > 30) {
+            $uuid = (string) Str::uuid();
+            Cache::put('bulk:'.$uuid, [
+                'status' => 'queued',
+                'processed' => 0,
+                'total' => count($players),
+            ], now()->addHour());
+
+            ProcessBulkPerformanceJob::dispatch($uuid, $trainingId, $players, $request->user()->id);
+
+            return $this->sendResponse([
+                'job_id' => $uuid,
+                'status' => 'queued',
+                'status_url' => route('api.jobs.status', $uuid),
+                'total' => count($players),
+            ], 'Bulk performance import queued.', 202);
+        }
+
         $performances = $this->performanceService->bulkUpsert(
             $trainingId,
-            $request->validated()['players'],
+            $players,
             $request->user()
         );
 
