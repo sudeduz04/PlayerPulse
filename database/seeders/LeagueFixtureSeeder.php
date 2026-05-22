@@ -20,11 +20,11 @@ class LeagueFixtureSeeder extends Seeder
 
         $teams = Teams::where('season', '2025-2026')
             ->orderBy('id')
-            ->limit(20)
+            ->limit(18)
             ->get();
 
-        if ($teams->count() < 20) {
-            $this->command?->warn('Süper Lig fikstürü için 20 takım gerekli, '.$teams->count().' bulundu. Önce TeamSeeder çalıştır.');
+        if ($teams->count() < 18) {
+            $this->command?->warn('Süper Lig fikstürü için 18 takım gerekli, '.$teams->count().' bulundu. Önce TeamSeeder çalıştır.');
             return;
         }
 
