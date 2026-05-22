@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Web\League;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreLeagueRequest extends FormRequest
 {
@@ -14,7 +15,14 @@ class StoreLeagueRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('leagues', 'name')
+                    ->where('season', $this->input('season'))
+                    ->ignore($this->route('league')),
+            ],
             'season' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'team_ids' => ['required', 'array', 'min:2'],

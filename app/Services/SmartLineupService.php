@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Jobs\GenerateSmartLineupJob;
 use App\Models\Lineups;
-use App\Models\Matches;
 use App\Models\Players;
 use App\Models\Positions;
 use App\Models\User;
@@ -113,14 +112,14 @@ class SmartLineupService
         })->values()->all();
 
         $prompt = "Mac bilgileri:\n".
-            "Takim: ".($match->homeTeam?->name ?? $match->team?->name)."\n".
-            "Rakip: ".($match->awayTeam?->name ?? $match->opponent_team)."\n".
-            "Tarih: ".($match->match_date?->format('d.m.Y') ?? '-')."\n".
+            'Takim: '.($match->homeTeam?->name ?? $match->team?->name)."\n".
+            'Rakip: '.($match->awayTeam?->name ?? $match->opponent_team)."\n".
+            'Tarih: '.($match->match_date?->format('d.m.Y') ?? '-')."\n".
             "Dizilis: {$lineup->formation}\n\n".
             "Dizilis slotlari (JSON, TAMAMI doldurulacak):\n".json_encode($slots, JSON_UNESCAPED_UNICODE)."\n\n".
             "Kullanilabilir oyuncular (JSON):\n".json_encode($rosterSummary, JSON_UNESCAPED_UNICODE)."\n\n".
             "Kullanilabilir pozisyonlar (JSON):\n".json_encode($positions->values()->map(fn ($pos) => ['id' => $pos->id, 'code' => $pos->code, 'name' => $pos->name]), JSON_UNESCAPED_UNICODE)."\n\n".
-            "Gorev: Slot listesindeki HER slot icin farkli bir oyuncu sec. Cikti tam 11 oyuncu olmak zorunda. ".
+            'Gorev: Slot listesindeki HER slot icin farkli bir oyuncu sec. Cikti tam 11 oyuncu olmak zorunda. '.
             'Sadece su JSON formati: {"players":[{"slot_key":"GK","player_id":1,"position_id":2,"recommendation_score":8.5,"reason":"..."}], "note":"genel not"}';
 
         $response = $this->ai->generateJson($prompt, [

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Matches;
+use App\Models\Teams;
 use App\Models\User;
 use App\Services\Authorization\TeamAccess;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -149,7 +150,7 @@ class MatchService
         }
 
         if (! empty($data['away_team_id']) && empty($data['opponent_team'])) {
-            $data['opponent_team'] = \App\Models\Teams::find($data['away_team_id'])?->name ?? 'Rakip';
+            $data['opponent_team'] = Teams::find($data['away_team_id'])?->name ?? 'Rakip';
         }
 
         return $data;

@@ -92,8 +92,8 @@ class AiAnalysisService
 
         $prompt = "Oyuncu verileri (JSON):\n".json_encode($context, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)."\n\n".
             ($focus ? "Özel odak: {$focus}\n\n" : '').
-            "Görev: Bu oyuncuyu profesyonel bir teknik direktör gözüyle analiz et. ".
-            "Sadece şu formatta JSON döndür: ".
+            'Görev: Bu oyuncuyu profesyonel bir teknik direktör gözüyle analiz et. '.
+            'Sadece şu formatta JSON döndür: '.
             '{"overall_score": 0.0-10.0, "summary": "kısa özet 1-2 cümle", "strengths": "güçlü yönler markdown", "weaknesses": "gelişim alanları markdown", "recommendations": "öneriler markdown"}';
 
         $response = $this->ai->generateJson($prompt, [

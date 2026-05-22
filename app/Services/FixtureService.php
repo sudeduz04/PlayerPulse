@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Leagues;
 use App\Models\Matches;
 use App\Models\Teams;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use RuntimeException;
@@ -94,6 +95,7 @@ class FixtureService
 
             if (! $normalized['week'] || ! $normalized['date'] || ! $normalized['home_team'] || ! $normalized['away_team']) {
                 $skipped[] = ['row' => $index + 1, 'reason' => 'Eksik hafta, tarih, ev sahibi veya deplasman bilgisi.'];
+
                 continue;
             }
 
@@ -102,11 +104,21 @@ class FixtureService
 
             if (! $home || ! $away) {
                 $skipped[] = ['row' => $index + 1, 'reason' => 'Takim adi lig takimlariyla eslesmedi.'];
+
                 continue;
             }
 
             if ($home->id === $away->id) {
                 $skipped[] = ['row' => $index + 1, 'reason' => 'Ev sahibi ve deplasman ayni olamaz.'];
+
+                continue;
+            }
+
+            try {
+                $matchDate = $this->date($normalized['date']);
+            } catch (\Throwable) {
+                $skipped[] = ['row' => $index + 1, 'reason' => 'Tarih formati okunamadi.'];
+
                 continue;
             }
 
@@ -120,7 +132,7 @@ class FixtureService
                 [
                     'team_id' => $home->id,
                     'opponent_team' => $away->name,
-                    'match_date' => $normalized['date'],
+                    'match_date' => $matchDate,
                     'match_type' => 'league',
                     'fixture_source' => $source,
                     'location' => $normalized['location'] ?: 'Lig fiksturu',
@@ -143,9 +155,20 @@ class FixtureService
         $rows = [];
         $headers = null;
 
-        while (($line = fgetcsv($handle, 0, ',')) !== false) {
+        $delimiter = ',';
+        $firstLine = fgets($handle);
+        if ($firstLine === false) {
+            fclose($handle);
+
+            return [];
+        }
+        $delimiter = substr_count($firstLine, ';') > substr_count($firstLine, ',') ? ';' : ',';
+        rewind($handle);
+
+        while (($line = fgetcsv($handle, 0, $delimiter)) !== false) {
             if ($headers === null) {
                 $headers = array_map(fn ($value) => $this->key($value), $line);
+
                 continue;
             }
 
@@ -169,6 +192,7 @@ class FixtureService
 
             if ($rowIndex === 1) {
                 $headers = array_map(fn ($value) => $this->key($value), $values);
+
                 continue;
             }
 
@@ -195,6 +219,25 @@ class FixtureService
 
     private function key(mixed $value): string
     {
-        return str_replace([' ', '-'], '_', mb_strtolower(trim((string) $value)));
+        return str_replace(["\xEF\xBB\xBF", ' ', '-'], ['', '_', '_'], mb_strtolower(trim((string) $value)));
+    }
+
+    private function date(mixed $value): string
+    {
+        if (is_numeric($value)) {
+            return Carbon::createFromDate(1899, 12, 30)->addDays((int) $value)->toDateString();
+        }
+
+        $text = trim((string) $value);
+
+        foreach (['Y-m-d', 'd.m.Y', 'd/m/Y', 'm/d/Y'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $text)->toDateString();
+            } catch (\Throwable) {
+                //
+            }
+        }
+
+        return Carbon::parse($text)->toDateString();
     }
 }

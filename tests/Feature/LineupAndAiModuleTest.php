@@ -10,8 +10,9 @@ use App\Models\Teams;
 use App\Models\User;
 use App\Services\Ai\AiProvider;
 use App\Services\Ai\NullAiProvider;
-use Illuminate\Support\Facades\Queue;
+use App\Services\SmartLineupService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class LineupAndAiModuleTest extends TestCase
@@ -247,7 +248,7 @@ class LineupAndAiModuleTest extends TestCase
         $this->assertNotNull($lineup);
         $this->assertEquals('queued', $lineup->status);
 
-        app(\App\Services\SmartLineupService::class)->processQueuedLineup($lineup->id);
+        app(SmartLineupService::class)->processQueuedLineup($lineup->id);
 
         $lineup->refresh()->load('players');
         $this->assertEquals('completed', $lineup->status);
