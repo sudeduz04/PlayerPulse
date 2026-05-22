@@ -52,11 +52,24 @@ AI analiz, akıllı kadro, fikstür dosya yükleme ve büyük bulk işlemler kuy
 - Örnek dosya: `storage/fixtures/sample-fixtures-2025-2026.csv`
 - Sütunlar: `week,date,home_team,away_team,location,status` (status opsiyonel; varsayılan `scheduled`).
 
+## Seed Edilen 2025-2026 Süper Lig Takımları (18)
+Galatasaray, Fenerbahçe, Beşiktaş, Trabzonspor, Samsunspor, Göztepe, Başakşehir,
+Antalyaspor, Konyaspor, Eyüpspor, Kasımpaşa, Kayserispor, Gaziantep FK,
+Alanyaspor, Çaykur Rizespor, Kocaelispor*, Fatih Karagümrük*, Gençlerbirliği*
+(* — 1. Lig'den çıkan takımlar.)
+
+Her takıma 10-13 oyuncu seed edilir. Fikstür round-robin: 18 × 17 × 2 = **306 maç** (34 hafta).
+İlk 14 hafta `finished` (skorlu), hafta 15 kısmen `first_half`, kalan haftalar `scheduled`.
+
 ## API
 Detaylı endpoint referansı: [docs/api.md](docs/api.md)
 - Base URL: `/api`
 - Auth: Sanctum bearer token
 - Her endpoint için web arayüzdeki karşılığı dokümanda belirtilmiştir.
+
+## Mobil Uygulama
+React Native (Expo) ile aynı API'yi tüketen bir mobil istemci nasıl kurulur, hangi ekran
+hangi web sayfasına denk gelir — adım adım rehber: [docs/mobile.md](docs/mobile.md)
 
 ## Test
 ```bash

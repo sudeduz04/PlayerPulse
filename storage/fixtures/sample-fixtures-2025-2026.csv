@@ -1,13 +1,13 @@
 week,date,home_team,away_team,location,status
 1,2025-08-08,Galatasaray,Fenerbahçe,Rams Park,scheduled
 1,2025-08-09,Beşiktaş,Trabzonspor,Tüpraş Stadyumu,scheduled
-1,2025-08-09,Başakşehir,Antalyaspor,Başakşehir Fatih Terim Stadyumu,scheduled
-1,2025-08-10,Alanyaspor,Konyaspor,Alanya Oba Stadyumu,scheduled
-1,2025-08-10,Samsunspor,Eyüpspor,Samsun 19 Mayıs Stadyumu,scheduled
+1,2025-08-09,Samsunspor,Göztepe,19 Mayıs Stadyumu,scheduled
+1,2025-08-10,Başakşehir,Antalyaspor,Başakşehir Fatih Terim Stadyumu,scheduled
+1,2025-08-10,Kayserispor,Konyaspor,RHG Enertürk Enerji Stadyumu,scheduled
+1,2025-08-10,Eyüpspor,Kasımpaşa,Atatürk Olimpiyat Stadyumu,scheduled
+1,2025-08-11,Gaziantep FK,Alanyaspor,Kalyon Stadyumu,scheduled
+1,2025-08-11,Çaykur Rizespor,Kocaelispor,Çaykur Didi Stadyumu,scheduled
+1,2025-08-11,Fatih Karagümrük,Gençlerbirliği,Atatürk Olimpiyat Stadyumu,scheduled
 2,2025-08-15,Fenerbahçe,Beşiktaş,Şükrü Saracoğlu,scheduled
 2,2025-08-16,Trabzonspor,Galatasaray,Papara Park,scheduled
-2,2025-08-16,Antalyaspor,Alanyaspor,Antalya Stadyumu,scheduled
-2,2025-08-17,Konyaspor,Başakşehir,Konya Büyükşehir Stadyumu,scheduled
-2,2025-08-17,Eyüpspor,Samsunspor,Eyüp Stadyumu,scheduled
-3,2025-08-22,Galatasaray,Beşiktaş,Rams Park,scheduled
-3,2025-08-23,Fenerbahçe,Trabzonspor,Şükrü Saracoğlu,scheduled
+2,2025-08-16,Göztepe,Başakşehir,Gürsel Aksel Stadyumu,scheduled
