@@ -33,6 +33,20 @@ class AiAnalysisController extends BaseController
         $data = $request->validated();
 
         try {
+            if ($request->boolean('async')) {
+                $analysis = $this->service->queuePlayerAnalysis(
+                    (int) $data['player_id'],
+                    $request->user(),
+                    $data['focus'] ?? null,
+                );
+
+                return $this->sendResponse([
+                    'id' => $analysis->id,
+                    'status' => $analysis->status,
+                    'status_url' => route('api.analysis.status', $analysis->id),
+                ], 'AI analysis queued.', 202);
+            }
+
             $analysis = $this->service->analyzePlayer(
                 (int) $data['player_id'],
                 $request->user(),
@@ -43,6 +57,19 @@ class AiAnalysisController extends BaseController
         }
 
         return $this->sendResponse($analysis, 'AI analysis created successfully.', 201);
+    }
+
+    public function status(Request $request, int $id): JsonResponse
+    {
+        $analysis = $this->service->show($id, $request->user());
+
+        return $this->sendResponse([
+            'id' => $analysis->id,
+            'status' => $analysis->status,
+            'status_label' => \App\Support\StatusLabels::analysis($analysis->status),
+            'score' => $analysis->score,
+            'error_message' => $analysis->error_message,
+        ], 'Analysis status retrieved successfully.');
     }
 
     public function show(Request $request, int $id): JsonResponse

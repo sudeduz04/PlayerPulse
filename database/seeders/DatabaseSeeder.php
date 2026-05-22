@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,
             TeamSeeder::class,
             PlayerSeeder::class,
+            LeagueFixtureSeeder::class,
         ]);
 
         User::factory()->create([

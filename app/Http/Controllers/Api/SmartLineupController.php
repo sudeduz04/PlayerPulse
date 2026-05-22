@@ -30,6 +30,21 @@ class SmartLineupController extends BaseController
         $data = $request->validated();
 
         try {
+            if ($request->boolean('async')) {
+                $lineup = $this->smartLineup->queueSuggestion(
+                    (int) $data['match_id'],
+                    $data['formation'],
+                    $request->user(),
+                    $data['note'] ?? null,
+                );
+
+                return $this->sendResponse([
+                    'id' => $lineup->id,
+                    'status' => $lineup->status,
+                    'status_url' => route('api.lineups.status', $lineup->id),
+                ], 'AI lineup suggestion queued.', 202);
+            }
+
             $lineup = $this->smartLineup->suggestAndStore(
                 (int) $data['match_id'],
                 $data['formation'],
@@ -41,5 +56,18 @@ class SmartLineupController extends BaseController
         }
 
         return $this->sendResponse($lineup, 'AI lineup suggestion created successfully.', 201);
+    }
+
+    public function status(Request $request, int $lineupId): JsonResponse
+    {
+        $lineup = $this->lineupService->show($lineupId, $request->user());
+
+        return $this->sendResponse([
+            'id' => $lineup->id,
+            'status' => $lineup->status,
+            'status_label' => \App\Support\StatusLabels::lineup($lineup->status),
+            'error_message' => $lineup->error_message,
+            'is_ai_generated' => (bool) $lineup->is_ai_generated,
+        ], 'Lineup status retrieved successfully.');
     }
 }
