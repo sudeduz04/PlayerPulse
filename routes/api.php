@@ -4,7 +4,10 @@ use App\Http\Controllers\Api\AiAnalysisController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DevelopmentReportController;
+use App\Http\Controllers\Api\FixtureImportController;
 use App\Http\Controllers\Api\InjuryController;
+use App\Http\Controllers\Api\JobStatusController;
+use App\Http\Controllers\Api\LeagueController;
 use App\Http\Controllers\Api\LineupController;
 use App\Http\Controllers\Api\MatchController;
 use App\Http\Controllers\Api\MatchStatsController;
@@ -38,6 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:super_admin,manager,coach')->group(function () {
         Route::apiResource('teams', TeamController::class)->only(['index', 'show']);
+        Route::get('/leagues', [LeagueController::class, 'index']);
+        Route::get('/leagues/{league}', [LeagueController::class, 'show']);
         Route::apiResource('players', PlayerController::class);
         Route::apiResource('trainings', TrainingController::class);
         Route::get('/trainings/{training}/performances', [TrainingPerformanceController::class, 'index']);
@@ -59,6 +64,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/teams/{team}', [TeamController::class, 'destroy']);
         Route::post('/teams/{team}/coaches', [TeamController::class, 'assignCoach']);
         Route::delete('/teams/{team}/coaches/{user}', [TeamController::class, 'removeCoach']);
+        Route::post('/teams/{team}/staff', [TeamController::class, 'assignStaff']);
+        Route::delete('/teams/{team}/staff/{user}', [TeamController::class, 'removeStaff']);
+
+        Route::apiResource('leagues', LeagueController::class)->only(['store', 'update', 'destroy']);
+        Route::post('/leagues/{league}/fixtures/import', [FixtureImportController::class, 'store']);
+        Route::get('/fixture-imports/{import}', [FixtureImportController::class, 'show'])->name('api.fixture-imports.show');
     });
 
     Route::middleware('role:super_admin,manager')->group(function () {
@@ -83,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('role:super_admin,coach')->group(function () {
         Route::get('/lineups/options', [LineupController::class, 'options']);
+        Route::get('/lineups/{lineup}/status', [SmartLineupController::class, 'status'])->name('api.lineups.status');
         Route::get('/matches/{match}/roster', [LineupController::class, 'roster']);
         Route::apiResource('lineups', LineupController::class)->only(['index', 'store', 'show', 'destroy']);
         Route::get('/smart-squad/options', [SmartLineupController::class, 'options']);
@@ -92,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:super_admin,manager,coach')->group(function () {
         Route::get('/analysis/options', [AiAnalysisController::class, 'options']);
         Route::get('/analysis', [AiAnalysisController::class, 'index']);
+        Route::get('/analysis/{analysis}/status', [AiAnalysisController::class, 'status'])->name('api.analysis.status');
         Route::get('/analysis/{analysis}', [AiAnalysisController::class, 'show']);
     });
 
@@ -99,4 +112,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/analysis', [AiAnalysisController::class, 'store']);
         Route::delete('/analysis/{analysis}', [AiAnalysisController::class, 'destroy']);
     });
+
+    Route::get('/jobs/{uuid}/status', [JobStatusController::class, 'show'])->name('api.jobs.status');
 });
