@@ -6,7 +6,7 @@
                 <h1 class="text-3xl font-bold text-white">{{ $analysis->player?->first_name }} {{ $analysis->player?->last_name }}</h1>
                 <p class="text-gray-500 text-sm mt-1">{{ $analysis->player?->team?->name }} · {{ $analysis->created_at?->format('d.m.Y H:i') }}</p>
             </div>
-            <span class="px-3 py-1 text-xs rounded-full bg-purple-500/15 text-purple-400">{{ $analysis->status }}</span>
+            <span class="px-3 py-1 text-xs rounded-full {{ \App\Support\StatusLabels::badgeClasses($analysis->status) }}">{{ \App\Support\StatusLabels::analysis($analysis->status) }}</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -21,7 +21,7 @@
             </div>
             <div class="bg-surface-700 border border-border rounded-xl p-4">
                 <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Durum</p>
-                <p class="text-white text-lg capitalize" id="analysis-status">{{ $analysis->status }}</p>
+                <p class="text-white text-lg" id="analysis-status">{{ \App\Support\StatusLabels::analysis($analysis->status) }}</p>
                 <p class="text-gray-400 text-xs mt-1">{{ $analysis->created_at?->format('d.m.Y H:i') }}</p>
             </div>
         </div>
@@ -56,10 +56,16 @@
                 const body = document.getElementById('analysis-body');
                 const status = document.getElementById('analysis-status');
                 const score = document.getElementById('analysis-score');
+                const statusLabels = {
+                    queued: 'Sıraya alındı',
+                    running: 'İşleniyor',
+                    completed: 'Hazır',
+                    failed: 'Başarısız',
+                };
                 const timer = setInterval(async () => {
                     const response = await window.axios.get(statusUrl);
                     const data = response.data.data;
-                    status.textContent = data.status;
+                    status.textContent = statusLabels[data.status] || data.status;
                     score.textContent = data.score ?? '-';
                     if (data.status === 'completed') {
                         body.innerHTML = data.reason_html;

@@ -46,10 +46,12 @@
                     </div>
                 </div>
 
-                <div id="lineup-field" class="relative bg-emerald-900/70 border border-emerald-500/30 rounded-xl min-h-[620px] overflow-hidden">
+                <div id="lineup-field" class="relative bg-emerald-900/70 border border-emerald-500/30 rounded-xl min-h-[480px] md:min-h-[640px] overflow-hidden">
                     <div class="absolute inset-4 border border-white/20 rounded-lg"></div>
-                    <div class="absolute left-1/2 top-4 bottom-4 border-l border-white/20"></div>
-                    <div class="absolute left-1/2 top-1/2 w-28 h-28 -ml-14 -mt-14 rounded-full border border-white/20"></div>
+                    <div class="absolute top-1/2 left-4 right-4 border-t border-white/20"></div>
+                    <div class="absolute left-1/2 top-1/2 w-24 h-24 md:w-28 md:h-28 -ml-12 md:-ml-14 -mt-12 md:-mt-14 rounded-full border border-white/20"></div>
+                    <div class="absolute top-0 left-1/2 -ml-14 md:-ml-16 w-28 md:w-32 h-10 md:h-12 border-b border-l border-r border-white/20 rounded-b"></div>
+                    <div class="absolute bottom-0 left-1/2 -ml-14 md:-ml-16 w-28 md:w-32 h-10 md:h-12 border-t border-l border-r border-white/20 rounded-t"></div>
                 </div>
 
                 <div class="flex items-center gap-3 mt-6">
@@ -89,7 +91,7 @@
                             const x = Math.round(((slotIndex + 1) / (line.length + 1)) * 100);
                             const y = Math.round(((lineIndex + 1) / (lineCount + 1)) * 100);
                             const card = document.createElement('div');
-                            card.className = 'slot-card absolute w-44 bg-surface-800/95 border border-white/10 rounded-lg p-2 shadow-lg';
+                            card.className = 'slot-card absolute w-28 sm:w-32 md:w-40 bg-surface-800/95 border border-white/10 rounded-lg p-2 shadow-lg';
                             card.style.left = `${x}%`;
                             card.style.top = `${y}%`;
                             card.style.transform = 'translate(-50%, -50%)';

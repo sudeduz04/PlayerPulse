@@ -11,6 +11,27 @@ class Matches extends Model
 {
     use SoftDeletes;
 
+    public const STATUS_SCHEDULED = 'scheduled';
+
+    public const STATUS_FIRST_HALF = 'first_half';
+
+    public const STATUS_HALF_TIME = 'half_time';
+
+    public const STATUS_SECOND_HALF = 'second_half';
+
+    public const STATUS_FINISHED = 'finished';
+
+    public const STATUS_POSTPONED = 'postponed';
+
+    public const STATUSES = [
+        self::STATUS_SCHEDULED,
+        self::STATUS_FIRST_HALF,
+        self::STATUS_HALF_TIME,
+        self::STATUS_SECOND_HALF,
+        self::STATUS_FINISHED,
+        self::STATUS_POSTPONED,
+    ];
+
     protected $fillable = [
         'league_id',
         'week',
@@ -19,10 +40,12 @@ class Matches extends Model
         'away_team_id',
         'opponent_team',
         'match_date',
+        'kickoff_time',
         'match_type',
         'fixture_source',
         'location',
         'result',
+        'status',
         'goals_for',
         'goals_against',
         'coach_note',

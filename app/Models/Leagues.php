@@ -26,4 +26,9 @@ class Leagues extends Model
     {
         return $this->hasMany(Matches::class, 'league_id');
     }
+
+    public function fixtureImports(): HasMany
+    {
+        return $this->hasMany(FixtureImports::class, 'league_id');
+    }
 }

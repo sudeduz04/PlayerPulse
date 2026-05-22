@@ -7,9 +7,12 @@
                 <p class="text-gray-500 text-sm mt-1">{{ $lineup->match?->match_date?->format('d.m.Y') }} · Diziliş: <span class="text-accent font-semibold">{{ $lineup->formation }}</span></p>
             </div>
             <div class="flex items-center gap-2">
-                <span class="px-3 py-1 text-xs rounded-full {{ $lineup->status === 'completed' ? 'bg-green-500/15 text-green-400' : ($lineup->status === 'failed' ? 'bg-red-500/15 text-red-400' : 'bg-yellow-500/15 text-yellow-300') }}">{{ $lineup->status }}</span>
+                <span class="px-3 py-1 text-xs rounded-full {{ \App\Support\StatusLabels::badgeClasses($lineup->status) }}">{{ \App\Support\StatusLabels::lineup($lineup->status) }}</span>
                 @if($lineup->is_ai_generated)
-                    <span class="px-3 py-1 text-xs rounded-full bg-purple-500/15 text-purple-400">AI Üretti</span>
+                    <span class="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-purple-500/15 text-purple-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M10 1a.75.75 0 0 1 .728.568l.658 2.634 2.634.658a.75.75 0 0 1 0 1.456l-2.634.658-.658 2.634a.75.75 0 0 1-1.456 0l-.658-2.634-2.634-.658a.75.75 0 0 1 0-1.456l2.634-.658.658-2.634A.75.75 0 0 1 10 1Zm5.5 9a.75.75 0 0 1 .728.568l.35 1.402 1.402.35a.75.75 0 0 1 0 1.456l-1.402.35-.35 1.402a.75.75 0 0 1-1.456 0l-.35-1.402-1.402-.35a.75.75 0 0 1 0-1.456l1.402-.35.35-1.402A.75.75 0 0 1 15.5 10Z" clip-rule="evenodd"/></svg>
+                        AI önerisi
+                    </span>
                 @endif
             </div>
         </div>
@@ -31,24 +34,26 @@
             </div>
         @endif
 
-        <div class="relative bg-emerald-900/70 border border-emerald-500/30 rounded-xl min-h-[650px] overflow-hidden mb-6">
+        <div class="relative bg-emerald-900/70 border border-emerald-500/30 rounded-xl min-h-[480px] md:min-h-[640px] overflow-hidden mb-6">
             <div class="absolute inset-4 border border-white/20 rounded-lg"></div>
-            <div class="absolute left-1/2 top-4 bottom-4 border-l border-white/20"></div>
-            <div class="absolute left-1/2 top-1/2 w-32 h-32 -ml-16 -mt-16 rounded-full border border-white/20"></div>
+            <div class="absolute top-1/2 left-4 right-4 border-t border-white/20"></div>
+            <div class="absolute left-1/2 top-1/2 w-24 h-24 md:w-32 md:h-32 -ml-12 md:-ml-16 -mt-12 md:-mt-16 rounded-full border border-white/20"></div>
+            <div class="absolute top-0 left-1/2 -ml-14 md:-ml-16 w-28 md:w-32 h-10 md:h-12 border-b border-l border-r border-white/20 rounded-b"></div>
+            <div class="absolute bottom-0 left-1/2 -ml-14 md:-ml-16 w-28 md:w-32 h-10 md:h-12 border-t border-l border-r border-white/20 rounded-t"></div>
             @foreach($lineup->players as $row)
-                <div class="absolute w-44 bg-surface-800/95 border border-white/10 rounded-lg p-3 shadow-lg text-center" style="left: {{ $row->field_x ?? 50 }}%; top: {{ $row->field_y ?? 50 }}%; transform: translate(-50%, -50%);">
-                    <div class="text-xs text-accent font-semibold">{{ $row->slot_key ?? $row->position?->code }}</div>
-                    <div class="text-white text-sm font-semibold mt-1">#{{ $row->player?->jersey_number }} {{ $row->player?->first_name }} {{ $row->player?->last_name }}</div>
-                    <div class="text-gray-400 text-xs mt-1">{{ $row->position?->name }}</div>
-                    @if($lineup->is_ai_generated)
-                        <div class="text-purple-300 text-xs mt-1">AI: {{ $row->recommendation_score ?? '-' }}</div>
+                <div class="absolute w-28 sm:w-32 md:w-40 bg-surface-800/95 border border-white/10 rounded-lg p-2 md:p-3 shadow-lg text-center" style="left: {{ $row->field_x ?? 50 }}%; top: {{ $row->field_y ?? 50 }}%; transform: translate(-50%, -50%);">
+                    <div class="text-[10px] md:text-xs text-accent font-semibold">{{ $row->slot_key ?? $row->position?->code }}</div>
+                    <div class="text-white text-xs md:text-sm font-semibold mt-1 truncate">#{{ $row->player?->jersey_number }} {{ $row->player?->last_name }}</div>
+                    <div class="text-gray-400 text-[10px] md:text-xs mt-1 truncate">{{ $row->position?->name }}</div>
+                    @if($lineup->is_ai_generated && $row->recommendation_score)
+                        <div class="text-purple-300 text-[10px] md:text-xs mt-1">AI: {{ number_format((float) $row->recommendation_score, 1) }}</div>
                     @endif
                 </div>
             @endforeach
         </div>
 
-        <div class="bg-surface-700 border border-border rounded-xl overflow-hidden">
-            <table class="w-full text-sm text-left">
+        <div class="bg-surface-700 border border-border rounded-xl overflow-hidden overflow-x-auto">
+            <table class="w-full text-sm text-left min-w-[480px]">
                 <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
                     <tr>
                         <th class="px-4 py-3">Slot</th>

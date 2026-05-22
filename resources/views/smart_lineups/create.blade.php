@@ -69,17 +69,25 @@
                     const data = response.data.data;
                     link.href = data.show_url;
                     link.classList.remove('hidden');
+                    const statusLabels = {
+                        queued: 'Sıraya alındı',
+                        running: 'İşleniyor',
+                        completed: 'Hazır',
+                        failed: 'Başarısız',
+                    };
                     const timer = setInterval(async () => {
                         const status = await window.axios.get(data.status_url);
                         const job = status.data.data;
-                        title.textContent = job.status === 'completed' ? 'Kadro hazır' : `Durum: ${job.status}`;
+                        title.textContent = statusLabels[job.status] || 'Hazırlanıyor';
                         if (job.status === 'completed') {
-                            text.textContent = 'Saha yerleşimi oluşturuldu.';
+                            text.textContent = 'Kadro hazır, sayfaya yönlendiriliyorsun.';
                             clearInterval(timer);
+                            setTimeout(() => { window.location.href = data.show_url; }, 600);
                         }
                         if (job.status === 'failed') {
                             text.textContent = job.error_message || 'AI kadro önerisi tamamlanamadı.';
                             clearInterval(timer);
+                            submit.disabled = false;
                         }
                     }, 2500);
                 } catch (error) {
