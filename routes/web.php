@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('teams', TeamController::class);
         Route::resource('leagues', LeagueController::class);
         Route::post('/leagues/{league}/fixtures', [LeagueController::class, 'import'])->name('leagues.fixtures.import');
+        Route::get('/leagues/{league}/imports/{import}/status', [LeagueController::class, 'importStatus'])->name('leagues.imports.status');
         Route::post('/teams/{team}/staff', [TeamController::class, 'assignStaff'])->name('teams.assign-staff');
         Route::delete('/teams/{team}/staff/{user}', [TeamController::class, 'removeStaff'])->name('teams.remove-staff');
         Route::resource('players', PlayerController::class);
