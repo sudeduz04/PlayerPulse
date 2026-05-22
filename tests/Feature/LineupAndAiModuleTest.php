@@ -67,6 +67,59 @@ class LineupAndAiModuleTest extends TestCase
         $this->assertEquals(11, $lineup->players()->count());
     }
 
+    public function test_coach_can_manage_lineups_through_api(): void
+    {
+        $coach = User::factory()->create(['role' => User::ROLE_COACH]);
+        $team = $this->team();
+        $team->staff()->attach($coach->id);
+        $match = $this->match($team->id);
+        $position = $this->position();
+
+        $players = collect(range(1, 11))
+            ->map(fn ($i) => $this->player($team->id, $position->id, ['jersey_number' => $i]));
+
+        $this->actingAs($coach, 'sanctum')
+            ->getJson('/api/lineups/options')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'data.matches')
+            ->assertJsonCount(1, 'data.positions');
+
+        $this->actingAs($coach, 'sanctum')
+            ->getJson("/api/matches/{$match->id}/roster")
+            ->assertOk()
+            ->assertJsonCount(11, 'data');
+
+        $create = $this->actingAs($coach, 'sanctum')
+            ->postJson('/api/lineups', [
+                'match_id' => $match->id,
+                'formation' => '4-2-3-1',
+                'note' => 'API lineup',
+                'players' => $players->map(fn ($p) => [
+                    'player_id' => $p->id,
+                    'position_id' => $position->id,
+                ])->all(),
+            ])
+            ->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.formation', '4-2-3-1');
+
+        $lineupId = $create->json('data.id');
+
+        $this->actingAs($coach, 'sanctum')
+            ->getJson("/api/lineups/{$lineupId}")
+            ->assertOk()
+            ->assertJsonPath('data.id', $lineupId)
+            ->assertJsonCount(11, 'data.players');
+
+        $this->actingAs($coach, 'sanctum')
+            ->deleteJson("/api/lineups/{$lineupId}")
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertDatabaseMissing('lineups', ['id' => $lineupId]);
+    }
+
     public function test_smart_squad_page_shows_warning_when_ai_not_configured(): void
     {
         $this->app->instance(AiProvider::class, new NullAiProvider);
@@ -102,6 +155,58 @@ class LineupAndAiModuleTest extends TestCase
             ->assertOk()
             ->assertSee('Yeni AI Analizi')
             ->assertSee('AI sağlayıcısı yapılandırılmamış');
+    }
+
+    public function test_smart_squad_api_reports_ai_status_and_missing_provider(): void
+    {
+        $this->app->instance(AiProvider::class, new NullAiProvider);
+
+        $coach = User::factory()->create(['role' => User::ROLE_COACH]);
+        $team = $this->team();
+        $team->staff()->attach($coach->id);
+        $match = $this->match($team->id);
+
+        $this->actingAs($coach, 'sanctum')
+            ->getJson('/api/smart-squad/options')
+            ->assertOk()
+            ->assertJsonPath('data.ai_ready', false)
+            ->assertJsonPath('data.ai_provider', 'none');
+
+        $this->actingAs($coach, 'sanctum')
+            ->postJson('/api/smart-squad', [
+                'match_id' => $match->id,
+                'formation' => '4-3-3',
+            ])
+            ->assertBadRequest()
+            ->assertJsonPath('success', false);
+    }
+
+    public function test_analysis_api_exposes_options_and_keeps_manager_read_only(): void
+    {
+        $this->app->instance(AiProvider::class, new NullAiProvider);
+
+        $manager = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $team = $this->team();
+        $team->staff()->attach($manager->id);
+        $player = $this->player($team->id, $this->position()->id);
+
+        $this->actingAs($manager, 'sanctum')
+            ->getJson('/api/analysis/options')
+            ->assertOk()
+            ->assertJsonPath('data.ai_ready', false)
+            ->assertJsonCount(1, 'data.players');
+
+        $this->actingAs($manager, 'sanctum')
+            ->getJson('/api/analysis')
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->actingAs($manager, 'sanctum')
+            ->postJson('/api/analysis', [
+                'player_id' => $player->id,
+                'focus' => 'test',
+            ])
+            ->assertForbidden();
     }
 
     public function test_coach_cannot_create_lineup_for_unassigned_team_match(): void

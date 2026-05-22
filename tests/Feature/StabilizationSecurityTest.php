@@ -114,6 +114,95 @@ class StabilizationSecurityTest extends TestCase
             ->assertJsonPath('success', false);
     }
 
+    public function test_super_admin_can_manage_users_through_api(): void
+    {
+        $superAdmin = User::factory()->create(['role' => User::ROLE_SUPER_ADMIN]);
+
+        $create = $this->actingAs($superAdmin, 'sanctum')
+            ->postJson('/api/users', [
+                'name' => 'Ayse',
+                'surname' => 'Yilmaz',
+                'email' => 'ayse@example.com',
+                'phone' => null,
+                'password' => 'password123',
+                'role' => User::ROLE_COACH,
+                'status' => true,
+            ])
+            ->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.email', 'ayse@example.com');
+
+        $userId = $create->json('data.id');
+
+        $this->actingAs($superAdmin, 'sanctum')
+            ->getJson("/api/users/{$userId}")
+            ->assertOk()
+            ->assertJsonPath('data.role', User::ROLE_COACH);
+
+        $this->actingAs($superAdmin, 'sanctum')
+            ->patchJson("/api/users/{$userId}", [
+                'name' => 'Ayse',
+                'surname' => 'Yilmaz',
+                'email' => 'ayse.updated@example.com',
+                'phone' => null,
+                'password' => null,
+                'role' => User::ROLE_MANAGER,
+                'status' => true,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.role', User::ROLE_MANAGER);
+
+        $this->actingAs($superAdmin, 'sanctum')
+            ->getJson('/api/users?role='.User::ROLE_MANAGER)
+            ->assertOk()
+            ->assertJsonPath('success', true);
+    }
+
+    public function test_dashboard_and_player_account_api_match_web_surface(): void
+    {
+        $manager = User::factory()->create(['role' => User::ROLE_MANAGER]);
+        $team = $this->team(['name' => 'Manager Team']);
+        $team->staff()->attach($manager->id);
+        $position = $this->position();
+        $player = $this->player($team->id, $position->id);
+
+        $this->actingAs($manager, 'sanctum')
+            ->getJson('/api/dashboard')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.total_teams', 1)
+            ->assertJsonPath('data.total_players', 1);
+
+        $createAccount = $this->actingAs($manager, 'sanctum')
+            ->postJson("/api/players/{$player->id}/create-account")
+            ->assertCreated()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.user.role', User::ROLE_PLAYER)
+            ->assertJsonPath('data.temporary_password', 'password');
+
+        $this->assertDatabaseHas('players', [
+            'id' => $player->id,
+            'user_id' => $createAccount->json('data.user.id'),
+        ]);
+    }
+
+    public function test_coach_cannot_update_team_through_api(): void
+    {
+        $coach = User::factory()->create(['role' => User::ROLE_COACH]);
+        $team = $this->team(['name' => 'Coach Team']);
+        $team->staff()->attach($coach->id);
+
+        $this->actingAs($coach, 'sanctum')
+            ->patchJson("/api/teams/{$team->id}", $this->teamPayload(['name' => 'Updated By Coach']))
+            ->assertForbidden()
+            ->assertJsonPath('success', false);
+
+        $this->assertDatabaseHas('teams', [
+            'id' => $team->id,
+            'name' => 'Coach Team',
+        ]);
+    }
+
     public function test_manager_and_coach_are_limited_to_assigned_teams(): void
     {
         $manager = User::factory()->create(['role' => User::ROLE_MANAGER]);

@@ -52,6 +52,12 @@ class TeamService
 
     public function update(int $id, array $data, User $user): Teams
     {
+        abort_unless(
+            $user->isSuperAdmin() || $user->isRole(User::ROLE_MANAGER),
+            403,
+            'Sadece super yoneticiler ve yoneticiler takim guncelleyebilir.'
+        );
+
         $team = Teams::findOrFail($id);
 
         $this->teamAccess->assertTeam($user, $team);
