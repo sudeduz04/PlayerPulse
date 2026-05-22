@@ -104,11 +104,13 @@ Route::middleware('auth')->group(function () {
         // AI smart lineup
         Route::get('/smart-squad', [SmartLineupController::class, 'create'])->name('smart-squad.create');
         Route::post('/smart-squad', [SmartLineupController::class, 'store'])->name('smart-squad.store');
+        Route::get('/smart-squad/{lineup}/status', [SmartLineupController::class, 'status'])->name('smart-squad.status');
 
         // AI analysis panel
         Route::get('/analysis', [AiAnalysisController::class, 'index'])->name('analysis.index');
         Route::get('/analysis/create', [AiAnalysisController::class, 'create'])->name('analysis.create');
         Route::post('/analysis', [AiAnalysisController::class, 'store'])->name('analysis.store');
+        Route::get('/analysis/{analysis}/status', [AiAnalysisController::class, 'status'])->name('analysis.status');
         Route::get('/analysis/{analysis}', [AiAnalysisController::class, 'show'])->name('analysis.show');
         Route::delete('/analysis/{analysis}', [AiAnalysisController::class, 'destroy'])->name('analysis.destroy');
     });
@@ -136,6 +138,7 @@ Route::middleware('auth')->group(function () {
 
         // AI analysis (read-only for manager)
         Route::get('/analysis', [AiAnalysisController::class, 'index'])->name('analysis.index');
+        Route::get('/analysis/{analysis}/status', [AiAnalysisController::class, 'status'])->name('analysis.status');
         Route::get('/analysis/{analysis}', [AiAnalysisController::class, 'show'])->name('analysis.show');
     });
 

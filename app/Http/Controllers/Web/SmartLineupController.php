@@ -20,10 +20,8 @@ class SmartLineupController extends Controller
 
     public function create(Request $request)
     {
-        $matches = $this->lineupService->availableMatches($request->user());
-
         return view('smart_lineups.create', [
-            'matches' => $matches,
+            'matches' => $this->lineupService->availableMatches($request->user()),
             'aiReady' => $this->smartLineup->isAiReady(),
             'aiProvider' => $this->smartLineup->aiProviderName(),
             'routePrefix' => $this->routePrefix(),
@@ -39,20 +37,43 @@ class SmartLineupController extends Controller
         ]);
 
         try {
-            $lineup = $this->smartLineup->suggestAndStore(
-                (int) $data['match_id'],
-                $data['formation'],
-                $request->user(),
-                $data['note'] ?? null,
-            );
+            $lineup = $this->smartLineup->queueSuggestion((int) $data['match_id'], $data['formation'], $request->user(), $data['note'] ?? null);
         } catch (Throwable $e) {
-            return redirect()
-                ->route($this->routePrefix().'.smart-squad.create')
-                ->with('error', 'AI önerisi alınamadı: '.$e->getMessage());
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'AI onerisi baslatilamadi: '.$e->getMessage()], 400);
+            }
+
+            return redirect()->route($this->routePrefix().'.smart-squad.create')->with('error', 'AI onerisi baslatilamadi: '.$e->getMessage());
         }
 
-        return redirect()
-            ->route($this->routePrefix().'.lineups.show', $lineup->id)
-            ->with('success', 'AI kadro önerisi oluşturuldu.');
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'AI kadro onerisi siraya alindi.',
+                'data' => [
+                    'id' => $lineup->id,
+                    'status' => $lineup->status,
+                    'status_url' => route($this->routePrefix().'.smart-squad.status', $lineup->id),
+                    'show_url' => route($this->routePrefix().'.lineups.show', $lineup->id),
+                ],
+            ], 202);
+        }
+
+        return redirect()->route($this->routePrefix().'.lineups.show', $lineup->id)->with('success', 'AI kadro onerisi siraya alindi.');
+    }
+
+    public function status(Request $request, int $lineupId)
+    {
+        $lineup = $this->lineupService->show($lineupId, $request->user());
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $lineup->id,
+                'status' => $lineup->status,
+                'error_message' => $lineup->error_message,
+                'show_url' => route($this->routePrefix().'.lineups.show', $lineup->id),
+            ],
+        ]);
     }
 }

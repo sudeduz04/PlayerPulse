@@ -9,4 +9,4 @@ vendor
 .phpunit.result.cache
 *.md
 .env
-
+/public/hot
