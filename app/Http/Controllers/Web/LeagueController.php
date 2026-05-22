@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Web\League\ImportFixtureRequest;
 use App\Http\Requests\Web\League\StoreLeagueRequest;
+use App\Models\FixtureImports;
+use App\Models\Matches;
 use App\Models\Teams;
 use App\Services\FixtureService;
 use Illuminate\Http\Request;
@@ -18,6 +20,8 @@ class LeagueController extends Controller
         return view('leagues.index', [
             'leagues' => $this->fixtureService->list($request->query()),
             'filters' => $request->query(),
+            'isReadOnly' => false,
+            'routePrefix' => 'super_admin.leagues',
         ]);
     }
 
@@ -35,12 +39,9 @@ class LeagueController extends Controller
         return redirect()->route('super_admin.leagues.show', $league->id)->with('success', 'Lig olusturuldu.');
     }
 
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
-        return view('leagues.show', [
-            'league' => $this->fixtureService->show($id),
-            'teams' => Teams::orderBy('name')->get(),
-        ]);
+        return $this->renderShow($request, $id, 'super_admin.leagues', false);
     }
 
     public function edit(int $id)
@@ -91,7 +92,7 @@ class LeagueController extends Controller
 
     public function importStatus(int $id, int $importId)
     {
-        $import = \App\Models\FixtureImports::where('league_id', $id)->findOrFail($importId);
+        $import = FixtureImports::where('league_id', $id)->findOrFail($importId);
 
         return response()->json([
             'success' => true,
@@ -105,5 +106,67 @@ class LeagueController extends Controller
                 'original_filename' => $import->original_filename,
             ],
         ]);
+    }
+
+    // ------- Public (tüm roller, read-only) -------
+
+    public function publicIndex(Request $request)
+    {
+        return view('leagues.index', [
+            'leagues' => $this->fixtureService->list($request->query()),
+            'filters' => $request->query(),
+            'isReadOnly' => true,
+            'routePrefix' => 'fixtures',
+        ]);
+    }
+
+    public function publicShow(Request $request, int $id)
+    {
+        return $this->renderShow($request, $id, 'fixtures', true);
+    }
+
+    // ------- Shared rendering -------
+
+    private function renderShow(Request $request, int $id, string $routePrefix, bool $isReadOnly)
+    {
+        $league = $this->fixtureService->show($id);
+
+        $matches = $league->matches->sortBy(['week', 'match_date', 'id'])->values();
+        $weeks = $matches->pluck('week')->filter()->unique()->sort()->values();
+
+        $defaultWeek = $this->resolveDefaultWeek($matches, $weeks);
+        $requestedWeek = (int) $request->query('week', $defaultWeek);
+        if (! $weeks->contains($requestedWeek)) {
+            $requestedWeek = $defaultWeek;
+        }
+
+        $weekMatches = $matches->where('week', $requestedWeek)->values();
+
+        return view('leagues.show', [
+            'league' => $league,
+            'teams' => Teams::orderBy('name')->get(),
+            'weeks' => $weeks,
+            'currentWeek' => $requestedWeek,
+            'weekMatches' => $weekMatches,
+            'previousWeek' => $weeks->filter(fn ($w) => $w < $requestedWeek)->last(),
+            'nextWeek' => $weeks->filter(fn ($w) => $w > $requestedWeek)->first(),
+            'finishedCount' => $matches->where('status', Matches::STATUS_FINISHED)->count(),
+            'liveCount' => $matches->whereIn('status', [Matches::STATUS_FIRST_HALF, Matches::STATUS_HALF_TIME, Matches::STATUS_SECOND_HALF])->count(),
+            'scheduledCount' => $matches->where('status', Matches::STATUS_SCHEDULED)->count(),
+            'isReadOnly' => $isReadOnly,
+            'routePrefix' => $routePrefix,
+        ]);
+    }
+
+    private function resolveDefaultWeek($matches, $weeks): int
+    {
+        if ($weeks->isEmpty()) {
+            return 0;
+        }
+
+        // İlk oynanmamış (scheduled/first_half/...) maçın haftası — yoksa son hafta
+        $firstUpcoming = $matches->first(fn ($m) => $m->status !== Matches::STATUS_FINISHED);
+
+        return $firstUpcoming?->week ?? $weeks->last();
     }
 }

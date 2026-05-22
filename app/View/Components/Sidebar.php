@@ -45,6 +45,7 @@ class Sidebar extends Component
                 ['label' => 'Kontrol Paneli', 'route' => 'coach.dashboard', 'url' => route('coach.dashboard'), 'icon' => 'dashboard'],
                 ['label' => 'Takımlarım', 'route' => 'coach.teams.*', 'url' => route('coach.teams.index'), 'icon' => 'team'],
                 ['label' => 'Oyuncular', 'route' => 'coach.players.*', 'url' => route('coach.players.index'), 'icon' => 'users'],
+                ['label' => 'Fikstür', 'route' => 'fixtures.*', 'url' => route('fixtures.index'), 'icon' => 'calendar'],
                 ['label' => 'Değerlendirme Yap', 'route' => 'coach.evaluations.*', 'url' => route('coach.evaluations.index'), 'icon' => 'clipboard'],
                 ['label' => 'Antrenmanlar', 'route' => 'coach.trainings.*', 'url' => route('coach.trainings.index'), 'icon' => 'dumbbell'],
                 ['label' => 'Maçlar', 'route' => 'coach.matches.*', 'url' => route('coach.matches.index'), 'icon' => 'chart-bar'],
@@ -56,6 +57,7 @@ class Sidebar extends Component
                 ['label' => 'Kontrol Paneli', 'route' => 'manager.dashboard', 'url' => route('manager.dashboard'), 'icon' => 'dashboard'],
                 ['label' => 'Takımım', 'route' => 'manager.teams.*', 'url' => route('manager.teams.index'), 'icon' => 'team'],
                 ['label' => 'Oyuncular', 'route' => 'manager.players.*', 'url' => route('manager.players.index'), 'icon' => 'users'],
+                ['label' => 'Fikstür', 'route' => 'fixtures.*', 'url' => route('fixtures.index'), 'icon' => 'calendar'],
                 ['label' => 'Antrenmanlar', 'route' => 'manager.trainings.*', 'url' => route('manager.trainings.index'), 'icon' => 'dumbbell'],
                 ['label' => 'Maçlar', 'route' => 'manager.matches.*', 'url' => route('manager.matches.index'), 'icon' => 'chart-bar'],
                 ['label' => 'Raporlar', 'route' => 'manager.evaluations.*', 'url' => route('manager.evaluations.index'), 'icon' => 'file-text'],
@@ -64,6 +66,7 @@ class Sidebar extends Component
             ],
             'player' => [
                 ['label' => 'Kontrol Paneli', 'route' => 'player.dashboard', 'url' => route('player.dashboard'), 'icon' => 'dashboard'],
+                ['label' => 'Fikstür', 'route' => 'fixtures.*', 'url' => route('fixtures.index'), 'icon' => 'calendar'],
                 ['label' => 'Performansım', 'route' => 'player.matches.*', 'url' => route('player.matches.index'), 'icon' => 'activity'],
                 ['label' => 'Gelişim Raporlarım', 'route' => 'player.reports.*', 'url' => route('player.reports.index'), 'icon' => 'trending-up'],
                 ['label' => 'Antrenman Geçmişi', 'route' => 'player.trainings.*', 'url' => route('player.trainings.index'), 'icon' => 'calendar'],

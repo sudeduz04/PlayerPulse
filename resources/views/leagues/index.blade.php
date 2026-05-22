@@ -1,11 +1,19 @@
 <x-layouts.app title="Fikstür">
     <div>
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
             <div>
                 <h1 class="text-3xl font-bold text-white">Fikstür</h1>
-                <p class="text-gray-500 text-sm mt-1">Lig ve sezon fikstürlerini yönetin.</p>
+                <p class="text-gray-500 text-sm mt-1">
+                    @if($isReadOnly)
+                        Aktif lig ve sezon fikstürlerini görüntüleyin.
+                    @else
+                        Lig ve sezon fikstürlerini yönetin.
+                    @endif
+                </p>
             </div>
-            <a href="{{ route('super_admin.leagues.create') }}" class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">Yeni Lig</a>
+            @unless($isReadOnly)
+                <a href="{{ route('super_admin.leagues.create') }}" class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">Yeni Lig</a>
+            @endunless
         </div>
 
         @if(session('success'))
@@ -26,9 +34,9 @@
                     <tr>
                         <th class="px-4 py-3">Lig</th>
                         <th class="px-4 py-3">Sezon</th>
-                        <th class="px-4 py-3">Takım</th>
-                        <th class="px-4 py-3">Maç</th>
-                        <th class="px-4 py-3"></th>
+                        <th class="px-4 py-3 text-center">Takım</th>
+                        <th class="px-4 py-3 text-center">Maç</th>
+                        <th class="px-4 py-3 text-right">İşlem</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
@@ -36,14 +44,14 @@
                         <tr class="hover:bg-surface-600">
                             <td class="px-4 py-3 text-white font-medium">{{ $league->name }}</td>
                             <td class="px-4 py-3 text-gray-300">{{ $league->season }}</td>
-                            <td class="px-4 py-3 text-gray-300">{{ $league->teams_count }}</td>
-                            <td class="px-4 py-3 text-gray-300">{{ $league->matches_count }}</td>
+                            <td class="px-4 py-3 text-center text-gray-300">{{ $league->teams_count }}</td>
+                            <td class="px-4 py-3 text-center text-gray-300">{{ $league->matches_count }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('super_admin.leagues.show', $league->id) }}" class="text-accent hover:text-accent-hover">Detay</a>
+                                <a href="{{ route($routePrefix . '.show', $league->id) }}" class="text-accent hover:text-accent-hover">Detay</a>
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Kayıt yok.</td></tr>
+                        <tr><td colspan="5" class="px-4 py-8 text-center text-gray-500">Henüz lig eklenmemiş.</td></tr>
                     @endforelse
                 </tbody>
             </table>

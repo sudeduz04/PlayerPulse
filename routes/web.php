@@ -34,6 +34,10 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+    // Tüm rollerin read-only erişebileceği fikstür sayfaları
+    Route::get('/fixtures', [LeagueController::class, 'publicIndex'])->name('fixtures.index');
+    Route::get('/fixtures/{league}', [LeagueController::class, 'publicShow'])->name('fixtures.show');
+
     // Root redirect based on role
     Route::get('/', function () {
         return match (auth()->user()->role) {

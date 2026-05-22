@@ -113,11 +113,11 @@ class LeagueFixtureSeeder extends Seeder
         $homeName = $teams->firstWhere('id', $homeId)?->name ?? '-';
         $awayName = $teams->firstWhere('id', $awayId)?->name ?? '-';
 
-        // İlk 14 hafta finished
+        // İlk 14 hafta finished — sonuç ev sahibi perspektifinden home/away/draw
         if ($week <= 14) {
             $goalsFor = random_int(0, 4);
             $goalsAgainst = random_int(0, 4);
-            $result = $goalsFor > $goalsAgainst ? 'W' : ($goalsFor < $goalsAgainst ? 'L' : 'D');
+            $result = $goalsFor > $goalsAgainst ? 'home_win' : ($goalsFor < $goalsAgainst ? 'away_win' : 'draw');
             $status = Matches::STATUS_FINISHED;
         } elseif ($week === 15 && $matchIndex < 2) {
             // Hafta 15'te ilk 2 maç canlı (first_half)
