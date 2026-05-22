@@ -35,6 +35,7 @@ class Sidebar extends Component
                 ['label' => 'divider', 'section' => 'Yönetim'],
                 ['label' => 'Kullanıcılar', 'route' => 'super_admin.users.*', 'url' => route('super_admin.users.index'), 'icon' => 'user-shield'],
                 ['label' => 'Takımlar', 'route' => 'super_admin.teams.*', 'url' => route('super_admin.teams.index'), 'icon' => 'team'],
+                ['label' => 'Fikstür', 'route' => 'super_admin.leagues.*', 'url' => route('super_admin.leagues.index'), 'icon' => 'calendar'],
                 ['label' => 'Oyuncular', 'route' => 'super_admin.players.*', 'url' => route('super_admin.players.index'), 'icon' => 'users'],
                 ['label' => 'Değerlendirmeler', 'route' => 'super_admin.evaluations.*', 'url' => route('super_admin.evaluations.index'), 'icon' => 'clipboard'],
                 ['label' => 'Antrenmanlar', 'route' => 'super_admin.trainings.*', 'url' => route('super_admin.trainings.index'), 'icon' => 'dumbbell'],

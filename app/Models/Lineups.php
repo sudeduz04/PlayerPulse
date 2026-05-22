@@ -14,6 +14,8 @@ class Lineups extends Model
         'formation',
         'note',
         'is_ai_generated',
+        'status',
+        'error_message',
     ];
 
     protected function casts(): array

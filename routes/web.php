@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DevelopmentReportController;
 use App\Http\Controllers\Web\EvaluationController;
 use App\Http\Controllers\Web\InjuryController;
+use App\Http\Controllers\Web\LeagueController;
 use App\Http\Controllers\Web\LineupController;
 use App\Http\Controllers\Web\MatchController;
 use App\Http\Controllers\Web\MatchStatsController;
@@ -49,6 +50,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'superAdmin'])->name('dashboard');
         Route::resource('users', UserController::class);
         Route::resource('teams', TeamController::class);
+        Route::resource('leagues', LeagueController::class);
+        Route::post('/leagues/{league}/fixtures', [LeagueController::class, 'import'])->name('leagues.fixtures.import');
         Route::post('/teams/{team}/staff', [TeamController::class, 'assignStaff'])->name('teams.assign-staff');
         Route::delete('/teams/{team}/staff/{user}', [TeamController::class, 'removeStaff'])->name('teams.remove-staff');
         Route::resource('players', PlayerController::class);
