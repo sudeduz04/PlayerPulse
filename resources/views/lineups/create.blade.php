@@ -75,7 +75,7 @@
                     '4-5-1': [['GK'], ['LB','LCB','RCB','RB'], ['LM','LCM','CM','RCM','RM'], ['ST']],
                 };
                 const roster = @json($roster->map(fn($p) => ['id' => $p->id, 'label' => '#'.$p->jersey_number.' '.$p->first_name.' '.$p->last_name.' ('.$p->position?->code.')'])->values());
-                const positions = @json($positions->map(fn($p) => ['id' => $p->id, 'label' => $p->name])->values());
+                const positions = @json($positions->map(fn($p) => ['id' => $p->id, 'label' => $p->name, 'code' => $p->code])->values());
                 const field = document.getElementById('lineup-field');
                 const select = document.getElementById('formation-select');
 
@@ -93,13 +93,14 @@
                             card.style.left = `${x}%`;
                             card.style.top = `${y}%`;
                             card.style.transform = 'translate(-50%, -50%)';
+                            const normalizedSlot = slot.replace(/^L|^R/, '').replace('CB', 'CB').replace('CM', 'CM').replace('DM', 'DM').replace('AM', 'AM');
                             card.innerHTML = `
                                 <input type="hidden" name="players[${index}][slot_key]" value="${slot}">
                                 <input type="hidden" name="players[${index}][field_x]" value="${x}">
                                 <input type="hidden" name="players[${index}][field_y]" value="${y}">
                                 <div class="text-xs text-accent font-semibold mb-1">${slot}</div>
                                 <select name="players[${index}][position_id]" required class="w-full mb-1 px-2 py-1 bg-surface-600 border border-border rounded text-white text-xs">
-                                    <option value="">Pozisyon</option>${positions.map(p => `<option value="${p.id}">${p.label}</option>`).join('')}
+                                    <option value="">Pozisyon</option>${positions.map(p => `<option value="${p.id}" ${p.code === slot || p.code === normalizedSlot ? 'selected' : ''}>${p.label}</option>`).join('')}
                                 </select>
                                 <select name="players[${index}][player_id]" required class="player-select w-full px-2 py-1 bg-surface-600 border border-border rounded text-white text-xs">
                                     <option value="">Oyuncu</option>${roster.map(p => `<option value="${p.id}">${p.label}</option>`).join('')}
