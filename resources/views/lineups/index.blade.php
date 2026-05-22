@@ -17,8 +17,8 @@
             </div>
         @endif
 
-        <div class="bg-surface-700 border border-border rounded-xl overflow-hidden">
-            <table class="w-full text-sm text-left">
+        <div class="bg-surface-700 border border-border rounded-xl overflow-hidden overflow-x-auto">
+            <table class="w-full text-sm text-left min-w-[720px]">
                 <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
                     <tr>
                         <th class="px-4 py-3">Maç</th>

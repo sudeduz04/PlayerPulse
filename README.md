@@ -1,135 +1,79 @@
-# Akıllı Analiz Destekli Futbolcu Performans ve Gelişim Takip Sistemi
+# PlayerPulse
 
-## Proje Tanımı
+Futbol takımı performans ve gelişim takip sistemi. Antrenör, yönetici ve futbolcu için ayrı paneller; manuel veya AI destekli ilk 11 önerisi; oyuncu analizi; lig ve fikstür yönetimi.
 
-Akıllı Analiz Destekli Futbolcu Performans ve Gelişim Takip Sistemi; takım yöneticisi, antrenör ve futbolcu panelleri üzerinden oyuncuların antrenman ve maç verilerini kaydetmeyi, gelişimlerini grafiklerle takip etmeyi ve istatistiklere dayalı otomatik analiz ve öneriler üretmeyi amaçlayan web ve mobil tabanlı bir platformdur.
+## Tech Stack
+- Laravel 12 (PHP 8.2+) + Sanctum
+- MySQL / SQLite
+- Tailwind CSS 4 + Vite
+- Queue (database driver) + arka plan job'lar
+- League CommonMark (markdown render)
+- phpoffice/phpspreadsheet (CSV / XLSX import)
 
-Bu sistem sayesinde:
+## Kurulum
+```bash
+git clone <repo>
+cd PlayerPulse
+composer setup           # install + .env + key:generate + migrate + npm install + npm build
+php artisan db:seed      # demo kullanıcılar + 2025-2026 Süper Lig fikstürü
+composer run-script dev  # serve + queue:listen + pail + vite (paralel)
+```
 
-- Oyuncu performans verileri kayıt altına alınır.
-- Gelişim süreci grafiklerle izlenir.
-- Performans değişimleri analiz edilir.
-- Antrenörler için veri destekli karar mekanizması oluşturulur.
+Demo kullanıcılar:
+| E-posta | Şifre | Rol |
+|---|---|---|
+| admin@test.com | password | super_admin |
+| coach@test.com | password | coach |
+| manager@test.com | password | manager |
 
----
+## Roller
+- **super_admin** — Lig, takım ve kullanıcı yönetimi. Fikstür yükleme.
+- **manager** — Atanmış takımın oyuncularını ve raporlarını görür, AI analizine erişir.
+- **coach** — Antrenman/maç verisi girer, manuel veya AI ilk 11 önerisi oluşturur, AI analiz isteği başlatır.
+- **player** — Kendi performansını, sağlığını ve maç/antrenman geçmişini görür.
 
-# Projenin Amacı
+## AI
+`.env` içine en az bir sağlayıcı ekle:
+```env
+OPENAI_API_KEY=sk-...
+# veya
+GEMINI_API_KEY=...
+```
+Hiçbiri tanımlı değilse uygulama AI bölümlerinde "AI sağlayıcısı yapılandırılmamış" uyarısı gösterir; diğer modüller etkilenmez.
 
-- Futbolcuların bireysel performans gelişimini ölçmek
-- Antrenörlere veri destekli analiz sunmak
-- Takım içi performans karşılaştırması yapmak
-- Manuel değerlendirme yerine sistematik analiz sağlamak
+## Queue Worker
+AI analiz, akıllı kadro, fikstür dosya yükleme ve büyük bulk işlemler kuyruğa alınır.
+- Dev: `composer run-script dev` otomatik `queue:listen` başlatır.
+- Production: `php artisan queue:work --tries=3 --timeout=300` (supervisord önerilir).
 
----
+## Fikstür Import
+- Süper-admin panelinden `Dosyadan Yükle` (CSV/XLSX) veya `Manuel Satır` formuyla yükleme yapılır.
+- Dosya yükleme **asenkron**'dur — durum panelinden polling ile takip edilir.
+- Örnek dosya: `storage/fixtures/sample-fixtures-2025-2026.csv`
+- Sütunlar: `week,date,home_team,away_team,location,status` (status opsiyonel; varsayılan `scheduled`).
 
-# Kullanılan Teknolojiler
+## API
+Detaylı endpoint referansı: [docs/api.md](docs/api.md)
+- Base URL: `/api`
+- Auth: Sanctum bearer token
+- Her endpoint için web arayüzdeki karşılığı dokümanda belirtilmiştir.
 
-## Web (Yönetim Paneli)
+## Test
+```bash
+composer test
+```
+SQLite in-memory ile çalışır; mevcut suite 52+ feature/unit testten oluşur.
 
-- Laravel (Backend Framework)
-- MySQL (Veritabanı)
-- HTML5
-- CSS3
-- JavaScript
+## Güvenlik
+- Rol bazlı route middleware (`role:super_admin,coach,...`)
+- Form request sınıfları ile validation
+- API CORS: `config/cors.php`
+- Bağımlılık denetimi: `composer audit`
 
-## Mobil Uygulama
-
-- React Native
-
----
-
-# Kullanıcı Rolleri
-
-## Yönetici
-
-- Takım oluşturma
-- Oyuncu ekleme / silme
-- Antrenör atama
-- Genel istatistikleri görüntüleme
-
-## Antrenör
-
-- Antrenman verisi girme
-- Maç performans verisi girme
-- Oyuncu gelişim grafiği görüntüleme
-- Sistem analizlerini inceleme
-
-## Futbolcu
-
-- Kendi performansını görüntüleme
-- Gelişim grafiğini takip etme
-- Kişisel analiz sonuçlarını görme
-
----
-
-# Sistem Özellikleri
-
-## 1. Performans Veri Girişi
-
-- Maç istatistikleri (gol, asist, şut, pas yüzdesi vb.)
-- Antrenman verileri (dayanıklılık, hız, kondisyon vb.)
-- Haftalık performans kayıtları
-
-## 2. Grafiksel Gelişim Takibi
-
-- Oyuncu bazlı performans grafikleri
-- Tarihe göre gelişim analizi
-- Kategori bazlı istatistik grafikleri
-
-## 3. Akıllı Analiz Sistemi
-
-- Önceki verilere göre performans karşılaştırma
-- Artış / düşüş tespiti
-- Otomatik yorum üretimi
-
-### Örnek Analiz Çıktıları
-
-- "Şut isabet oranında %12 düşüş var."
-- "Dayanıklılık seviyesi son 3 haftada artış göstermiştir."
-- "Pas başarısı stabil seyrediyor."
-
-## 4. İlk 11 Öneri Sistemi (Opsiyonel Gelişmiş Özellik)
-
-- Pozisyon bazlı en yüksek performanslı oyuncuları analiz etme
-- Form durumuna göre otomatik ilk 11 önerisi
-- Ortalama performans puanı hesaplama
-
----
-
-# Veritabanı Yapısı (Özet)
-
-- users
-- teams
-- players
-- matches
-- trainings
-- performance_stats
-- analysis_results
-
----
-
-# Güvenlik Özellikleri
-
-- Rol bazlı yetkilendirme
-- Laravel authentication sistemi
-- API güvenliği
-- Veri doğrulama (validation)
-
----
-
-# Yapılacaklar (To-Do)
-
-- [ ] Veritabanı tasarımının tamamlanması
-- [ ] Laravel backend kurulumu
-- [ ] API endpointlerinin oluşturulması
-- [ ] React Native mobil arayüz tasarımı
-- [ ] Grafik sistemi entegrasyonu
-- [ ] Analiz algoritmasının geliştirilmesi
-- [ ] Test süreci
-- [ ] Deploy işlemleri
-
----
-
-# Sonuç
-
-Bu proje, futbol takımları için veri odaklı karar verme mekanizması sunarak oyuncu gelişimini sistematik ve ölçülebilir hale getirmeyi amaçlamaktadır.
+## Dökümantasyon
+- `docs/api.md` — API referansı
+- `docs/architecture.md` — mimari özet
+- `docs/database.md` — veri modeli
+- `docs/modules.md` — modül özetleri
+- `docs/roles-and-permissions.md` — yetki matrisi
+- `docs/testing.md` — test stratejisi
