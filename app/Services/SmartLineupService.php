@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\GenerateSmartLineupJob;
 use App\Models\Lineups;
 use App\Models\Matches;
 use App\Models\Players;
@@ -10,6 +11,7 @@ use App\Models\User;
 use App\Services\Ai\AiProvider;
 use App\Services\Authorization\TeamAccess;
 use RuntimeException;
+use Throwable;
 
 class SmartLineupService
 {
@@ -29,82 +31,144 @@ class SmartLineupService
         return $this->ai->name();
     }
 
-    public function suggestAndStore(int $matchId, string $formation, User $user, ?string $note = null): Lineups
+    public function queueSuggestion(int $matchId, string $formation, User $user, ?string $note = null): Lineups
     {
         if (! $this->ai->isConfigured()) {
-            throw new RuntimeException('AI sağlayıcısı yapılandırılmamış.');
+            throw new RuntimeException('AI saglayicisi yapilandirilmamis.');
         }
 
-        $match = Matches::with('team')->findOrFail($matchId);
-        $this->teamAccess->assertTeam($user, $match->team_id);
+        $lineup = $this->lineupService->createQueued([
+            'match_id' => $matchId,
+            'formation' => $formation,
+            'note' => $note,
+        ], $user);
+
+        GenerateSmartLineupJob::dispatch($lineup->id);
+
+        return $lineup;
+    }
+
+    public function suggestAndStore(int $matchId, string $formation, User $user, ?string $note = null): Lineups
+    {
+        $lineup = $this->lineupService->createQueued([
+            'match_id' => $matchId,
+            'formation' => $formation,
+            'note' => $note,
+        ], $user);
+
+        return $this->processQueuedLineup($lineup->id);
+    }
+
+    public function processQueuedLineup(int $lineupId): Lineups
+    {
+        $lineup = Lineups::with(['match.team', 'match.homeTeam', 'match.awayTeam', 'creator'])->findOrFail($lineupId);
+        $lineup->update(['status' => 'running', 'error_message' => null]);
+
+        try {
+            $players = $this->buildSuggestion($lineup);
+            $aiNote = trim(($lineup->note ? $lineup->note."\n\n" : '').'AI notu: '.($players['note'] ?? '-'));
+
+            return $this->lineupService->completeQueued($lineup, $players['players'], $aiNote);
+        } catch (Throwable $e) {
+            $this->lineupService->failQueued($lineup, $e->getMessage());
+            throw $e;
+        }
+    }
+
+    private function buildSuggestion(Lineups $lineup): array
+    {
+        if (! $this->ai->isConfigured()) {
+            throw new RuntimeException('AI saglayicisi yapilandirilmamis.');
+        }
+
+        $match = $lineup->match;
+        $this->teamAccess->assertMatch($lineup->creator, $match);
+
+        $teamId = $match->home_team_id ?: $match->team_id;
 
         $roster = Players::with(['position', 'matchStats', 'trainingPerformances', 'developmentReports' => fn ($q) => $q->latest('report_date')->limit(2)])
-            ->where('team_id', $match->team_id)
+            ->where('team_id', $teamId)
             ->whereNull('deleted_at')
             ->get();
 
         if ($roster->count() < 11) {
-            throw new RuntimeException('Takımda 11 oyuncudan az kayıt var. Önce kadroyu doldur.');
+            throw new RuntimeException('Takimda 11 oyuncudan az kayit var. Once kadroyu doldur.');
         }
 
         $positions = Positions::all()->keyBy('id');
-        $positionsByCode = Positions::all()->keyBy('code');
+        $slots = $this->lineupService->formationSlots($lineup->formation);
 
         $rosterSummary = $roster->map(function (Players $p) {
-            $matchAvg = $p->matchStats->isEmpty() ? null : round($p->matchStats->avg('match_rating') ?? 0, 2);
-            $trainAvg = $p->trainingPerformances->isEmpty() ? null : round($p->trainingPerformances->avg('performance_score') ?? 0, 2);
-            $latestReport = $p->developmentReports->first();
-
             return [
                 'id' => $p->id,
                 'name' => trim($p->first_name.' '.$p->last_name),
                 'jersey' => $p->jersey_number,
                 'position_code' => $p->position?->code,
                 'position' => $p->position?->name,
-                'avg_match_rating' => $matchAvg,
-                'avg_training_score' => $trainAvg,
-                'latest_overall_score' => $latestReport?->overall_score,
+                'avg_match_rating' => $p->matchStats->isEmpty() ? null : round($p->matchStats->avg('match_rating') ?? 0, 2),
+                'avg_training_score' => $p->trainingPerformances->isEmpty() ? null : round($p->trainingPerformances->avg('performance_score') ?? 0, 2),
+                'latest_overall_score' => $p->developmentReports->first()?->overall_score,
                 'matches_played' => $p->matchStats->count(),
             ];
         })->values()->all();
 
-        $availablePositions = $positions->map(fn ($pos) => ['id' => $pos->id, 'code' => $pos->code, 'name' => $pos->name])->values()->all();
-
-        $prompt = "Maç bilgileri:\n".
-            "Takım: {$match->team?->name}\n".
-            "Rakip: {$match->opponent_team}\n".
+        $prompt = "Mac bilgileri:\n".
+            "Takim: ".($match->homeTeam?->name ?? $match->team?->name)."\n".
+            "Rakip: ".($match->awayTeam?->name ?? $match->opponent_team)."\n".
             "Tarih: ".($match->match_date?->format('d.m.Y') ?? '-')."\n".
-            "Diziliş: {$formation}\n\n".
-            "Kullanılabilir oyuncular (JSON):\n".json_encode($rosterSummary, JSON_UNESCAPED_UNICODE)."\n\n".
-            "Kullanılabilir pozisyonlar (JSON):\n".json_encode($availablePositions, JSON_UNESCAPED_UNICODE)."\n\n".
-            "Görev: {$formation} dizilişine uygun en iyi 11 oyuncuyu seç. Her oyuncu için yukarıdaki position id'lerden birini ata. ".
-            "Sadece şu formatta JSON döndür (başka açıklama ekleme): ".
-            '{"players":[{"player_id":1,"position_id":2,"recommendation_score":8.5,"reason":"..."}, ...11 adet], "note":"genel kadro notu"}';
+            "Dizilis: {$lineup->formation}\n\n".
+            "Dizilis slotlari (JSON, TAMAMI doldurulacak):\n".json_encode($slots, JSON_UNESCAPED_UNICODE)."\n\n".
+            "Kullanilabilir oyuncular (JSON):\n".json_encode($rosterSummary, JSON_UNESCAPED_UNICODE)."\n\n".
+            "Kullanilabilir pozisyonlar (JSON):\n".json_encode($positions->values()->map(fn ($pos) => ['id' => $pos->id, 'code' => $pos->code, 'name' => $pos->name]), JSON_UNESCAPED_UNICODE)."\n\n".
+            "Gorev: Slot listesindeki HER slot icin farkli bir oyuncu sec. Cikti tam 11 oyuncu olmak zorunda. ".
+            'Sadece su JSON formati: {"players":[{"slot_key":"GK","player_id":1,"position_id":2,"recommendation_score":8.5,"reason":"..."}], "note":"genel not"}';
 
         $response = $this->ai->generateJson($prompt, [
-            'system' => 'Sen profesyonel bir futbol teknik direktörüsün. Verilen oyuncu verilerine göre en iyi 11i seç. Sadece geçerli JSON döndür.',
+            'system' => 'Sen profesyonel bir futbol teknik direktorusun. Tam 11 farkli oyuncu sec. Sadece gecerli JSON dondur.',
+            'temperature' => 0.2,
         ]);
 
-        if (empty($response['players']) || ! is_array($response['players']) || count($response['players']) !== 11) {
-            throw new RuntimeException('AI 11 oyuncu önermedi. Yanıt: '.json_encode($response));
-        }
+        $players = $this->normalizeAiPlayers($response, $roster, $positions, $slots);
 
-        $rosterIds = collect($rosterSummary)->pluck('id')->all();
+        return [
+            'players' => $players,
+            'note' => $response['note'] ?? '-',
+        ];
+    }
+
+    private function normalizeAiPlayers(array $response, $roster, $positions, array $slots): array
+    {
+        $entries = collect($response['players'] ?? [])->filter(fn ($entry) => is_array($entry))->values();
+        $rosterIds = $roster->pluck('id')->all();
+        $fallbackPositionId = (int) $positions->keys()->first();
         $players = [];
+        $used = [];
 
-        foreach ($response['players'] as $entry) {
-            $playerId = $entry['player_id'] ?? null;
-            $positionId = $entry['position_id'] ?? null;
+        foreach ($slots as $index => $slot) {
+            $entry = $entries->firstWhere('slot_key', $slot['slot_key']) ?? $entries->get($index, []);
+            $playerId = (int) ($entry['player_id'] ?? 0);
 
-            if (! in_array($playerId, $rosterIds, true)) {
-                throw new RuntimeException("AI geçersiz oyuncu önerdi (id={$playerId}).");
+            if (! in_array($playerId, $rosterIds, true) || in_array($playerId, $used, true)) {
+                $candidate = $roster
+                    ->sortByDesc(fn (Players $p) => ($p->matchStats->avg('match_rating') ?? 0) + ($p->trainingPerformances->avg('performance_score') ?? 0))
+                    ->first(fn (Players $p) => ! in_array($p->id, $used, true));
+                $playerId = $candidate?->id;
             }
 
+            if (! $playerId) {
+                throw new RuntimeException('Kadro 11 oyuncuya tamamlanamadi.');
+            }
+
+            $positionId = (int) ($entry['position_id'] ?? 0);
             if (! $positions->has($positionId)) {
-                throw new RuntimeException("AI geçersiz pozisyon önerdi (id={$positionId}).");
+                $positionId = $roster->firstWhere('id', $playerId)?->position_id ?: $fallbackPositionId;
             }
 
+            $used[] = $playerId;
             $players[] = [
+                'slot_key' => $slot['slot_key'],
+                'field_x' => $slot['field_x'],
+                'field_y' => $slot['field_y'],
                 'player_id' => $playerId,
                 'position_id' => $positionId,
                 'is_starting' => true,
@@ -112,13 +176,6 @@ class SmartLineupService
             ];
         }
 
-        $aiNote = trim(($note ? $note."\n\n" : '')."AI notu: ".($response['note'] ?? '-'));
-
-        return $this->lineupService->create([
-            'match_id' => $matchId,
-            'formation' => $formation,
-            'note' => $aiNote,
-            'players' => $players,
-        ], $user, isAiGenerated: true);
+        return $players;
     }
 }

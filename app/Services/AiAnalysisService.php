@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\GenerateAiAnalysisJob;
 use App\Models\AiRecommendations;
 use App\Models\Players;
 use App\Models\User;
@@ -10,6 +11,7 @@ use App\Services\Authorization\TeamAccess;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use RuntimeException;
+use Throwable;
 
 class AiAnalysisService
 {
@@ -114,9 +116,60 @@ class AiAnalysisService
             'player_id' => $player->id,
             'match_id' => null,
             'recommendation_type' => 'player_analysis',
+            'status' => 'completed',
             'score' => $score,
             'reason' => $reasonText,
         ]);
+    }
+
+    public function queuePlayerAnalysis(int $playerId, User $user, ?string $focus = null): AiRecommendations
+    {
+        if (! $this->ai->isConfigured()) {
+            throw new RuntimeException('AI saglayicisi yapilandirilmamis.');
+        }
+
+        $player = Players::findOrFail($playerId);
+        $this->teamAccess->assertPlayer($user, $player);
+
+        $analysis = AiRecommendations::create([
+            'player_id' => $player->id,
+            'match_id' => null,
+            'recommendation_type' => 'player_analysis',
+            'status' => 'queued',
+            'metadata' => ['focus' => $focus, 'requested_by' => $user->id],
+        ]);
+
+        GenerateAiAnalysisJob::dispatch($analysis->id);
+
+        return $analysis;
+    }
+
+    public function processQueuedAnalysis(int $analysisId): AiRecommendations
+    {
+        $analysis = AiRecommendations::findOrFail($analysisId);
+        $analysis->update(['status' => 'running', 'error_message' => null]);
+
+        try {
+            $requester = User::findOrFail((int) ($analysis->metadata['requested_by'] ?? 0));
+            $generated = $this->analyzePlayer((int) $analysis->player_id, $requester, $analysis->metadata['focus'] ?? null);
+
+            $analysis->update([
+                'status' => 'completed',
+                'score' => $generated->score,
+                'reason' => $generated->reason,
+                'error_message' => null,
+            ]);
+            $generated->delete();
+
+            return $analysis->fresh(['player.team']);
+        } catch (Throwable $e) {
+            $analysis->update([
+                'status' => 'failed',
+                'error_message' => $e->getMessage(),
+            ]);
+
+            throw $e;
+        }
     }
 
     public function delete(int $id, User $user): void
