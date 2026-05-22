@@ -12,10 +12,15 @@ class Matches extends Model
     use SoftDeletes;
 
     protected $fillable = [
+        'league_id',
+        'week',
         'team_id',
+        'home_team_id',
+        'away_team_id',
         'opponent_team',
         'match_date',
         'match_type',
+        'fixture_source',
         'location',
         'result',
         'goals_for',
@@ -35,6 +40,21 @@ class Matches extends Model
         return $this->belongsTo(Teams::class, 'team_id');
     }
 
+    public function league(): BelongsTo
+    {
+        return $this->belongsTo(Leagues::class, 'league_id');
+    }
+
+    public function homeTeam(): BelongsTo
+    {
+        return $this->belongsTo(Teams::class, 'home_team_id');
+    }
+
+    public function awayTeam(): BelongsTo
+    {
+        return $this->belongsTo(Teams::class, 'away_team_id');
+    }
+
     public function playerMatchStats(): HasMany
     {
         return $this->hasMany(PlayerMatchStats::class, 'match_id');
@@ -43,5 +63,12 @@ class Matches extends Model
     public function lineups(): HasMany
     {
         return $this->hasMany(Lineups::class, 'match_id');
+    }
+
+    public function involvesTeam(int $teamId): bool
+    {
+        return $this->team_id === $teamId
+            || $this->home_team_id === $teamId
+            || $this->away_team_id === $teamId;
     }
 }

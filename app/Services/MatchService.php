@@ -13,18 +13,41 @@ class MatchService
 
     public function list(array $filters, User $user): LengthAwarePaginator
     {
-        $query = Matches::with(['team']);
+        $query = Matches::with(['team', 'league', 'homeTeam', 'awayTeam']);
 
         if ($user->isRole(User::ROLE_COACH) || $user->isRole(User::ROLE_MANAGER)) {
-            $query->whereIn('team_id', $user->getTeamIds());
+            $teamIds = $user->getTeamIds();
+            $query->where(function ($q) use ($teamIds) {
+                $q->whereIn('team_id', $teamIds)
+                    ->orWhereIn('home_team_id', $teamIds)
+                    ->orWhereIn('away_team_id', $teamIds);
+            });
         }
 
         if ($user->isRole(User::ROLE_PLAYER)) {
-            $query->where('team_id', $user->player?->team_id);
+            $teamId = $user->player?->team_id;
+            $query->where(function ($q) use ($teamId) {
+                $q->where('team_id', $teamId)
+                    ->orWhere('home_team_id', $teamId)
+                    ->orWhere('away_team_id', $teamId);
+            });
         }
 
         if (! empty($filters['team_id'])) {
-            $query->where('team_id', $filters['team_id']);
+            $teamId = (int) $filters['team_id'];
+            $query->where(function ($q) use ($teamId) {
+                $q->where('team_id', $teamId)
+                    ->orWhere('home_team_id', $teamId)
+                    ->orWhere('away_team_id', $teamId);
+            });
+        }
+
+        if (! empty($filters['league_id'])) {
+            $query->where('league_id', $filters['league_id']);
+        }
+
+        if (! empty($filters['week'])) {
+            $query->where('week', $filters['week']);
         }
 
         if (! empty($filters['match_type'])) {
@@ -32,7 +55,12 @@ class MatchService
         }
 
         if (! empty($filters['search'])) {
-            $query->where('opponent_team', 'like', '%'.$filters['search'].'%');
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('opponent_team', 'like', '%'.$search.'%')
+                    ->orWhereHas('homeTeam', fn ($team) => $team->where('name', 'like', '%'.$search.'%'))
+                    ->orWhereHas('awayTeam', fn ($team) => $team->where('name', 'like', '%'.$search.'%'));
+            });
         }
 
         if (! empty($filters['date_from'])) {
@@ -50,9 +78,9 @@ class MatchService
 
     public function show(int $id, User $user): Matches
     {
-        $match = Matches::with(['team', 'playerMatchStats'])->findOrFail($id);
+        $match = Matches::with(['team', 'league', 'homeTeam', 'awayTeam', 'playerMatchStats'])->findOrFail($id);
 
-        $this->teamAccess->assertTeam($user, $match->team_id);
+        $this->teamAccess->assertMatch($user, $match);
 
         return $match;
     }
@@ -62,8 +90,10 @@ class MatchService
         abort_unless(
             $user->isSuperAdmin() || $user->isRole(User::ROLE_COACH),
             403,
-            'Bu işlem için antrenör veya süper yönetici yetkisi gerekir.'
+            'Bu islem icin antrenor veya super yonetici yetkisi gerekir.'
         );
+
+        $data = $this->normalizeFixtureData($data);
 
         if ($user->isRole(User::ROLE_COACH)) {
             $this->teamAccess->assertTeam($user, (int) $data['team_id']);
@@ -71,7 +101,7 @@ class MatchService
 
         $match = Matches::create($data);
 
-        return $match->load(['team']);
+        return $match->load(['team', 'league', 'homeTeam', 'awayTeam']);
     }
 
     public function update(int $id, array $data, User $user): Matches
@@ -79,22 +109,22 @@ class MatchService
         abort_unless(
             $user->isSuperAdmin() || $user->isRole(User::ROLE_COACH),
             403,
-            'Bu işlem için antrenör veya süper yönetici yetkisi gerekir.'
+            'Bu islem icin antrenor veya super yonetici yetkisi gerekir.'
         );
 
         $match = Matches::findOrFail($id);
 
-        $this->teamAccess->assertTeam($user, $match->team_id);
+        $this->teamAccess->assertMatch($user, $match);
 
-        if (isset($data['team_id']) && (int) $data['team_id'] !== $match->team_id) {
-            if ($user->isRole(User::ROLE_COACH)) {
-                $this->teamAccess->assertTeam($user, (int) $data['team_id']);
-            }
+        $data = $this->normalizeFixtureData($data);
+
+        if (isset($data['team_id']) && (int) $data['team_id'] !== $match->team_id && $user->isRole(User::ROLE_COACH)) {
+            $this->teamAccess->assertTeam($user, (int) $data['team_id']);
         }
 
         $match->update($data);
 
-        return $match->fresh(['team']);
+        return $match->fresh(['team', 'league', 'homeTeam', 'awayTeam']);
     }
 
     public function delete(int $id, User $user): void
@@ -102,13 +132,26 @@ class MatchService
         abort_unless(
             $user->isSuperAdmin() || $user->isRole(User::ROLE_COACH),
             403,
-            'Bu işlem için antrenör veya süper yönetici yetkisi gerekir.'
+            'Bu islem icin antrenor veya super yonetici yetkisi gerekir.'
         );
 
         $match = Matches::findOrFail($id);
 
-        $this->teamAccess->assertTeam($user, $match->team_id);
+        $this->teamAccess->assertMatch($user, $match);
 
         $match->delete();
+    }
+
+    private function normalizeFixtureData(array $data): array
+    {
+        if (! empty($data['home_team_id'])) {
+            $data['team_id'] = $data['home_team_id'];
+        }
+
+        if (! empty($data['away_team_id']) && empty($data['opponent_team'])) {
+            $data['opponent_team'] = \App\Models\Teams::find($data['away_team_id'])?->name ?? 'Rakip';
+        }
+
+        return $data;
     }
 }

@@ -11,14 +11,18 @@ class AiRecommendations extends Model
         'player_id',
         'match_id',
         'recommendation_type',
+        'status',
         'score',
         'reason',
+        'error_message',
+        'metadata',
     ];
 
     protected function casts(): array
     {
         return [
             'score' => 'decimal:2',
+            'metadata' => 'array',
         ];
     }
 

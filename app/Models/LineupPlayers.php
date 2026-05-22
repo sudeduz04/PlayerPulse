@@ -11,6 +11,9 @@ class LineupPlayers extends Model
         'lineup_id',
         'player_id',
         'position_id',
+        'slot_key',
+        'field_x',
+        'field_y',
         'is_starting',
         'recommendation_score',
     ];
