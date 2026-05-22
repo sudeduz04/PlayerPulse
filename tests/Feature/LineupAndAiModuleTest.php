@@ -10,6 +10,7 @@ use App\Models\Teams;
 use App\Models\User;
 use App\Services\Ai\AiProvider;
 use App\Services\Ai\NullAiProvider;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -120,6 +121,37 @@ class LineupAndAiModuleTest extends TestCase
         $this->assertDatabaseMissing('lineups', ['id' => $lineupId]);
     }
 
+    public function test_ai_analysis_ajax_request_is_queued(): void
+    {
+        Queue::fake();
+        $this->app->instance(AiProvider::class, new FakeAiProvider([
+            'overall_score' => 8,
+            'summary' => 'Hazir',
+            'strengths' => '- Hiz',
+            'weaknesses' => '- Deneyim',
+            'recommendations' => '- Calisma',
+        ]));
+
+        $coach = User::factory()->create(['role' => User::ROLE_COACH]);
+        $team = $this->team();
+        $team->staff()->attach($coach->id);
+        $player = $this->player($team->id, $this->position()->id);
+
+        $this->actingAs($coach)
+            ->postJson('/coach/analysis', [
+                'player_id' => $player->id,
+                'focus' => 'savunma',
+            ])
+            ->assertAccepted()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.status', 'queued');
+
+        $this->assertDatabaseHas('ai_recommendations', [
+            'player_id' => $player->id,
+            'status' => 'queued',
+        ]);
+    }
+
     public function test_smart_squad_page_shows_warning_when_ai_not_configured(): void
     {
         $this->app->instance(AiProvider::class, new NullAiProvider);
@@ -179,6 +211,50 @@ class LineupAndAiModuleTest extends TestCase
             ])
             ->assertBadRequest()
             ->assertJsonPath('success', false);
+    }
+
+    public function test_smart_lineup_completes_missing_ai_player_to_11_and_stores_field_slots(): void
+    {
+        Queue::fake();
+
+        $coach = User::factory()->create(['role' => User::ROLE_COACH]);
+        $team = $this->team();
+        $team->staff()->attach($coach->id);
+        $match = $this->match($team->id);
+        $position = $this->position();
+
+        $players = collect(range(1, 11))
+            ->map(fn ($i) => $this->player($team->id, $position->id, ['jersey_number' => $i]));
+
+        $this->app->instance(AiProvider::class, new FakeAiProvider([
+            'players' => $players->take(10)->values()->map(fn ($player, $index) => [
+                'slot_key' => $index === 0 ? 'GK' : null,
+                'player_id' => $player->id,
+                'position_id' => $position->id,
+                'recommendation_score' => 8,
+            ])->all(),
+            'note' => '10 oyuncu geldi, sistem tamamlamali.',
+        ]));
+
+        $this->actingAs($coach)
+            ->post('/coach/smart-squad', [
+                'match_id' => $match->id,
+                'formation' => '4-4-2',
+            ])
+            ->assertRedirect();
+
+        $lineup = Lineups::with('players')->first();
+        $this->assertNotNull($lineup);
+        $this->assertEquals('queued', $lineup->status);
+
+        app(\App\Services\SmartLineupService::class)->processQueuedLineup($lineup->id);
+
+        $lineup->refresh()->load('players');
+        $this->assertEquals('completed', $lineup->status);
+        $this->assertEquals(11, $lineup->players->count());
+        $this->assertNotNull($lineup->players->first()->slot_key);
+        $this->assertNotNull($lineup->players->first()->field_x);
+        $this->assertNotNull($lineup->players->first()->field_y);
     }
 
     public function test_analysis_api_exposes_options_and_keeps_manager_read_only(): void
@@ -280,5 +356,30 @@ class LineupAndAiModuleTest extends TestCase
             'match_type' => 'league',
             'location' => 'home',
         ]);
+    }
+}
+
+class FakeAiProvider implements AiProvider
+{
+    public function __construct(private array $response) {}
+
+    public function isConfigured(): bool
+    {
+        return true;
+    }
+
+    public function name(): string
+    {
+        return 'fake';
+    }
+
+    public function generate(string $prompt, array $options = []): string
+    {
+        return json_encode($this->response);
+    }
+
+    public function generateJson(string $prompt, array $options = []): array
+    {
+        return $this->response;
     }
 }
