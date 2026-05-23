@@ -5,10 +5,12 @@
                 <h1 class="text-3xl font-bold text-white">AI Analizler</h1>
                 <p class="text-gray-500 text-sm mt-1">Oyuncularına yapay zekâ tabanlı analiz raporu oluştur.</p>
             </div>
-            <a href="{{ route($routePrefix . '.analysis.create') }}"
-               class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
-                + Yeni Analiz
-            </a>
+            @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
+                <a href="{{ route($routePrefix . '.analysis.create') }}"
+                   class="bg-accent hover:bg-accent-hover text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                    + Yeni Analiz
+                </a>
+            @endif
         </div>
 
         @if(session('success'))
@@ -71,12 +73,14 @@
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route($routePrefix . '.analysis.show', $a->id) }}" class="text-accent hover:text-accent-hover text-sm transition-colors">Görüntüle</a>
-                                    <form method="POST" action="{{ route($routePrefix . '.analysis.destroy', $a->id) }}" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" onclick="return confirm('Bu analizi silmek istediğinize emin misiniz?')"
-                                                class="text-red-400 hover:text-red-300 text-sm transition-colors">Sil</button>
-                                    </form>
+                                    @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
+                                        <form method="POST" action="{{ route($routePrefix . '.analysis.destroy', $a->id) }}" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" onclick="return confirm('Bu analizi silmek istediğinize emin misiniz?')"
+                                                    class="text-red-400 hover:text-red-300 text-sm transition-colors">Sil</button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>
