@@ -57,12 +57,16 @@
         @endif
 
         {{-- Table --}}
-        <div class="bg-surface-700 border border-border rounded-xl overflow-hidden">
-            <table class="w-full text-sm text-left">
+        @php
+            $user = auth()->user();
+            $isSuperAdmin = $user->isSuperAdmin();
+        @endphp
+        <div class="bg-surface-700 border border-border rounded-xl overflow-hidden overflow-x-auto">
+            <table class="w-full text-sm text-left min-w-[720px]">
                 <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
                     <tr>
-                        <th class="px-6 py-3">Rakip Takım</th>
-                        <th class="px-6 py-3">Takım</th>
+                        <th class="px-6 py-3">{{ $isSuperAdmin ? 'Maç' : 'Rakip' }}</th>
+                        @if(!$isSuperAdmin)<th class="px-6 py-3">Saha</th>@endif
                         <th class="px-6 py-3">Tarih</th>
                         <th class="px-6 py-3">Tür</th>
                         <th class="px-6 py-3 text-center">Skor</th>
@@ -72,34 +76,63 @@
                 </thead>
                 <tbody class="divide-y divide-border">
                     @forelse($matches as $match)
+                        @php
+                            $opponent = $match->opponentForUser($user);
+                            $side = $match->sideForUser($user);
+                            $goalsFor = $match->goalsForUser($user);
+                            $goalsAgainst = $match->goalsAgainstUser($user);
+                            $result = $match->resultForUser($user);
+                            $resultClass = match($result) {
+                                'Galibiyet' => 'bg-accent/15 text-accent',
+                                'Mağlubiyet' => 'bg-red-500/15 text-red-400',
+                                'Beraberlik' => 'bg-yellow-500/15 text-yellow-400',
+                                default => 'bg-gray-500/15 text-gray-400',
+                            };
+                            $showScore = in_array($match->status, ['finished', 'first_half', 'half_time', 'second_half'], true);
+                        @endphp
                         <tr class="hover:bg-surface-600 transition-colors">
-                            <td class="px-6 py-4 font-medium text-white">{{ $match->opponent_team }}</td>
-                            <td class="px-6 py-4 text-gray-300">{{ $match->team?->name ?? '-' }}</td>
+                            <td class="px-6 py-4 font-medium text-white">
+                                {{ $opponent }}
+                                @if($match->week)
+                                    <div class="text-[10px] text-gray-500 mt-0.5">{{ $match->week }}. Hafta</div>
+                                @endif
+                            </td>
+                            @if(!$isSuperAdmin)
+                                <td class="px-6 py-4">
+                                    @if($side === 'home')
+                                        <span class="px-2 py-0.5 text-[11px] rounded-full bg-emerald-500/15 text-emerald-400">İç Saha</span>
+                                    @elseif($side === 'away')
+                                        <span class="px-2 py-0.5 text-[11px] rounded-full bg-orange-500/15 text-orange-400">Deplasman</span>
+                                    @else
+                                        <span class="text-gray-500 text-xs">-</span>
+                                    @endif
+                                </td>
+                            @endif
                             <td class="px-6 py-4 text-gray-300">{{ $match->match_date?->format('d.m.Y') }}</td>
                             <td class="px-6 py-4">
                                 <span class="px-2 py-1 text-xs rounded-full bg-blue-500/15 text-blue-400">{{ $match->match_type }}</span>
                             </td>
-                            <td class="px-6 py-4 text-center font-bold text-white">{{ $match->goals_for }} - {{ $match->goals_against }}</td>
-                            <td class="px-6 py-4">
-                                @if($match->result)
-                                    @php
-                                        $resultClass = match(strtolower($match->result)) {
-                                            'galibiyet', 'kazandı', 'win' => 'bg-accent/15 text-accent',
-                                            'mağlubiyet', 'kaybetti', 'loss' => 'bg-red-500/15 text-red-400',
-                                            'beraberlik', 'draw' => 'bg-yellow-500/15 text-yellow-400',
-                                            default => 'bg-gray-500/15 text-gray-400',
-                                        };
-                                    @endphp
-                                    <span class="px-2 py-1 text-xs rounded-full {{ $resultClass }}">{{ $match->result }}</span>
+                            <td class="px-6 py-4 text-center font-bold text-white">
+                                @if($showScore)
+                                    {{ $goalsFor }} - {{ $goalsAgainst }}
                                 @else
                                     <span class="text-gray-500">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($result)
+                                    <span class="px-2 py-1 text-xs rounded-full {{ $resultClass }}">{{ $result }}</span>
+                                @else
+                                    <span class="px-2 py-1 text-xs rounded-full {{ \App\Support\StatusLabels::badgeClasses($match->status) }}">
+                                        {{ \App\Support\StatusLabels::matchStatus($match->status) }}
+                                    </span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route($routePrefix . '.matches.show', $match->id) }}"
                                        class="text-accent hover:text-accent-hover text-sm transition-colors">Görüntüle</a>
-                                    @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
+                                    @if($user->isSuperAdmin() || $user->isRole('coach'))
                                         <a href="{{ route($routePrefix . '.matches.edit', $match->id) }}"
                                            class="text-gray-400 hover:text-white text-sm transition-colors">Düzenle</a>
                                         <form method="POST" action="{{ route($routePrefix . '.matches.destroy', $match->id) }}" class="inline">
@@ -115,7 +148,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-8 text-center text-gray-500">Henüz maç bulunmuyor.</td>
+                            <td colspan="{{ $isSuperAdmin ? 6 : 7 }}" class="px-6 py-8 text-center text-gray-500">Henüz maç bulunmuyor.</td>
                         </tr>
                     @endforelse
                 </tbody>

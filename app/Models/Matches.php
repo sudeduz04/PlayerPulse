@@ -94,4 +94,84 @@ class Matches extends Model
             || $this->home_team_id === $teamId
             || $this->away_team_id === $teamId;
     }
+
+    /**
+     * Kullanıcının atandığı takım perspektifinden rakip adını döndürür.
+     * Kullanıcının takımı maça dahil değilse veya super_admin ise ev sahibi vs deplasman gösterir.
+     */
+    public function opponentForUser(?User $user): string
+    {
+        $myTeamIds = $user?->getTeamIds()->all() ?? [];
+
+        if ($this->home_team_id && in_array($this->home_team_id, $myTeamIds, true)) {
+            return $this->awayTeam?->name ?? $this->opponent_team ?? '-';
+        }
+        if ($this->away_team_id && in_array($this->away_team_id, $myTeamIds, true)) {
+            return $this->homeTeam?->name ?? '-';
+        }
+        if ($this->team_id && in_array($this->team_id, $myTeamIds, true)) {
+            return $this->opponent_team ?? $this->awayTeam?->name ?? '-';
+        }
+
+        // Kullanıcının takımı bu maçta yok (örn super_admin) → ev sahibi vs deplasman
+        $home = $this->homeTeam?->name ?? $this->team?->name ?? '-';
+        $away = $this->awayTeam?->name ?? $this->opponent_team ?? '-';
+        return $home.' vs '.$away;
+    }
+
+    /**
+     * Kullanıcı takımının bu maçta ev sahibi mi deplasman mı olduğunu döndürür.
+     * 'home' | 'away' | null (takım maçta değilse)
+     */
+    public function sideForUser(?User $user): ?string
+    {
+        $myTeamIds = $user?->getTeamIds()->all() ?? [];
+
+        if ($this->home_team_id && in_array($this->home_team_id, $myTeamIds, true)) {
+            return 'home';
+        }
+        if ($this->away_team_id && in_array($this->away_team_id, $myTeamIds, true)) {
+            return 'away';
+        }
+        if ($this->team_id && in_array($this->team_id, $myTeamIds, true)) {
+            return 'home';
+        }
+        return null;
+    }
+
+    /**
+     * Kullanıcı takımının attığı gol (lehte).
+     */
+    public function goalsForUser(?User $user): int
+    {
+        return $this->sideForUser($user) === 'away'
+            ? (int) ($this->goals_against ?? 0)
+            : (int) ($this->goals_for ?? 0);
+    }
+
+    /**
+     * Kullanıcı takımına atılan gol (aleyhte).
+     */
+    public function goalsAgainstUser(?User $user): int
+    {
+        return $this->sideForUser($user) === 'away'
+            ? (int) ($this->goals_for ?? 0)
+            : (int) ($this->goals_against ?? 0);
+    }
+
+    /**
+     * Kullanıcı takımı perspektifinden sonuç: 'Galibiyet' | 'Mağlubiyet' | 'Beraberlik' | null (oynanmadıysa)
+     */
+    public function resultForUser(?User $user): ?string
+    {
+        if ($this->status !== self::STATUS_FINISHED) {
+            return null;
+        }
+        $for = $this->goalsForUser($user);
+        $against = $this->goalsAgainstUser($user);
+
+        if ($for > $against) return 'Galibiyet';
+        if ($for < $against) return 'Mağlubiyet';
+        return 'Beraberlik';
+    }
 }

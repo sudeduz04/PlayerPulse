@@ -1,11 +1,30 @@
-<x-layouts.app title="{{ $match->opponent_team }}">
+@php
+    $user = auth()->user();
+    $opponent = $match->opponentForUser($user);
+    $side = $match->sideForUser($user);
+    $goalsFor = $match->goalsForUser($user);
+    $goalsAgainst = $match->goalsAgainstUser($user);
+    $resultLabel = $match->resultForUser($user);
+    $myTeamName = $side === 'away'
+        ? ($match->awayTeam?->name ?? '-')
+        : ($match->homeTeam?->name ?? $match->team?->name ?? '-');
+    $showScore = in_array($match->status, ['finished', 'first_half', 'half_time', 'second_half'], true);
+@endphp
+<x-layouts.app title="vs {{ $opponent }}">
     <div>
         {{-- Header --}}
-        <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
             <div>
                 <a href="{{ route($routePrefix . '.matches.index') }}" class="text-gray-500 hover:text-gray-300 text-sm transition-colors mb-2 inline-block">&larr; Maçlara Dön</a>
-                <h1 class="text-3xl font-bold text-white">vs {{ $match->opponent_team }}</h1>
-                <p class="text-gray-500 text-sm mt-1">{{ $match->team?->name }} &middot; {{ $match->match_date?->format('d.m.Y') }}</p>
+                <h1 class="text-3xl font-bold text-white">vs {{ $opponent }}</h1>
+                <p class="text-gray-500 text-sm mt-1">
+                    {{ $myTeamName }}
+                    @if($side === 'home') <span class="text-emerald-400">· İç Saha</span>
+                    @elseif($side === 'away') <span class="text-orange-400">· Deplasman</span>
+                    @endif
+                    &middot; {{ $match->match_date?->format('d.m.Y') }}
+                    @if($match->week) &middot; {{ $match->week }}. Hafta @endif
+                </p>
             </div>
             @if(auth()->user()->isSuperAdmin() || auth()->user()->isRole('coach'))
                 <div class="flex items-center gap-2">
@@ -40,26 +59,31 @@
         <div class="bg-surface-700 border border-border rounded-xl p-6 mb-6 text-center">
             <div class="flex items-center justify-center gap-8">
                 <div>
-                    <p class="text-gray-400 text-sm mb-1">{{ $match->team?->name }}</p>
-                    <p class="text-4xl font-bold text-white">{{ $match->goals_for }}</p>
+                    <p class="text-gray-400 text-sm mb-1">{{ $myTeamName }}</p>
+                    <p class="text-4xl font-bold text-white">{{ $showScore ? $goalsFor : '-' }}</p>
                 </div>
                 <p class="text-2xl font-bold text-gray-500">-</p>
                 <div>
-                    <p class="text-gray-400 text-sm mb-1">{{ $match->opponent_team }}</p>
-                    <p class="text-4xl font-bold text-white">{{ $match->goals_against }}</p>
+                    <p class="text-gray-400 text-sm mb-1">{{ $opponent }}</p>
+                    <p class="text-4xl font-bold text-white">{{ $showScore ? $goalsAgainst : '-' }}</p>
                 </div>
             </div>
-            @if($match->result)
-                @php
-                    $resultClass = match(strtolower($match->result)) {
-                        'galibiyet', 'kazandı', 'win' => 'bg-accent/15 text-accent',
-                        'mağlubiyet', 'kaybetti', 'loss' => 'bg-red-500/15 text-red-400',
-                        'beraberlik', 'draw' => 'bg-yellow-500/15 text-yellow-400',
-                        default => 'bg-gray-500/15 text-gray-400',
-                    };
-                @endphp
-                <span class="inline-block mt-3 px-3 py-1 text-sm rounded-full {{ $resultClass }}">{{ $match->result }}</span>
-            @endif
+            <div class="mt-3 flex items-center justify-center gap-2">
+                <span class="px-3 py-1 text-xs rounded-full {{ \App\Support\StatusLabels::badgeClasses($match->status) }}">
+                    {{ \App\Support\StatusLabels::matchStatus($match->status) }}
+                </span>
+                @if($resultLabel)
+                    @php
+                        $resultClass = match($resultLabel) {
+                            'Galibiyet' => 'bg-accent/15 text-accent',
+                            'Mağlubiyet' => 'bg-red-500/15 text-red-400',
+                            'Beraberlik' => 'bg-yellow-500/15 text-yellow-400',
+                            default => 'bg-gray-500/15 text-gray-400',
+                        };
+                    @endphp
+                    <span class="px-3 py-1 text-xs rounded-full {{ $resultClass }}">{{ $resultLabel }}</span>
+                @endif
+            </div>
         </div>
 
         {{-- Match Info --}}
@@ -67,12 +91,12 @@
             <h2 class="text-lg font-semibold text-white mb-4">Maç Bilgileri</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Takım</p>
-                    <p class="text-white">{{ $match->team?->name ?? '-' }}</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Bizim Takım</p>
+                    <p class="text-white">{{ $myTeamName }}</p>
                 </div>
                 <div>
-                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Rakip Takım</p>
-                    <p class="text-white">{{ $match->opponent_team }}</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Rakip</p>
+                    <p class="text-white">{{ $opponent }}</p>
                 </div>
                 <div>
                     <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Tarih</p>
@@ -83,12 +107,12 @@
                     <p class="text-white">{{ $match->match_type }}</p>
                 </div>
                 <div>
-                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Konum</p>
+                    <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">{{ $side === 'away' ? 'Deplasman Sahası' : 'Saha' }}</p>
                     <p class="text-white">{{ $match->location ?? '-' }}</p>
                 </div>
                 <div>
                     <p class="text-gray-500 text-xs uppercase tracking-wider mb-1">Sonuç</p>
-                    <p class="text-white">{{ $match->result ?? '-' }}</p>
+                    <p class="text-white">{{ $resultLabel ?? '-' }}</p>
                 </div>
             </div>
             @if($match->coach_note)
