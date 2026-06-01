@@ -83,7 +83,10 @@ class SmartLineupService
         $match = $lineup->match;
         $this->teamAccess->assertMatch($lineup->creator, $match);
 
-        $teamId = $match->home_team_id ?: $match->team_id;
+        $teamId = $this->lineupService->resolveUserTeamId($match, $lineup->creator);
+        $ownTeam = \App\Models\Teams::find($teamId);
+        $opponentTeamName = $this->resolveOpponentName($match, $teamId);
+        $isHome = $match->home_team_id === $teamId || (! $match->home_team_id && $match->team_id === $teamId);
 
         $roster = Players::with(['position', 'matchStats', 'trainingPerformances', 'developmentReports' => fn ($q) => $q->latest('report_date')->limit(2)])
             ->where('team_id', $teamId)
@@ -112,10 +115,11 @@ class SmartLineupService
         })->values()->all();
 
         $prompt = "Mac bilgileri:\n".
-            'Takim: '.($match->homeTeam?->name ?? $match->team?->name)."\n".
-            'Rakip: '.($match->awayTeam?->name ?? $match->opponent_team)."\n".
+            'Bizim takim: '.($ownTeam?->name ?? '-').' ('.($isHome ? 'ev sahibi' : 'deplasman').")\n".
+            'Rakip takim: '.$opponentTeamName."\n".
             'Tarih: '.($match->match_date?->format('d.m.Y') ?? '-')."\n".
             "Dizilis: {$lineup->formation}\n\n".
+            "Onemli: Asagidaki oyuncular yalnizca bizim takimimizin (".($ownTeam?->name ?? '').") kadrosudur. Rakip takim oyuncusu secme.\n\n".
             "Dizilis slotlari (JSON, TAMAMI doldurulacak):\n".json_encode($slots, JSON_UNESCAPED_UNICODE)."\n\n".
             "Kullanilabilir oyuncular (JSON):\n".json_encode($rosterSummary, JSON_UNESCAPED_UNICODE)."\n\n".
             "Kullanilabilir pozisyonlar (JSON):\n".json_encode($positions->values()->map(fn ($pos) => ['id' => $pos->id, 'code' => $pos->code, 'name' => $pos->name]), JSON_UNESCAPED_UNICODE)."\n\n".
@@ -133,6 +137,17 @@ class SmartLineupService
             'players' => $players,
             'note' => $response['note'] ?? '-',
         ];
+    }
+
+    private function resolveOpponentName(\App\Models\Matches $match, int $ownTeamId): string
+    {
+        if ($match->home_team_id === $ownTeamId) {
+            return $match->awayTeam?->name ?? $match->opponent_team ?? '-';
+        }
+        if ($match->away_team_id === $ownTeamId) {
+            return $match->homeTeam?->name ?? '-';
+        }
+        return $match->opponent_team ?? $match->awayTeam?->name ?? '-';
     }
 
     private function normalizeAiPlayers(array $response, $roster, $positions, array $slots): array

@@ -75,13 +75,31 @@ class LineupService
 
         $this->teamAccess->assertMatch($user, $match);
 
-        $teamId = $match->home_team_id ?: $match->team_id;
+        $teamId = $this->resolveUserTeamId($match, $user);
 
         return Players::with('position')
             ->where('team_id', $teamId)
             ->whereNull('deleted_at')
             ->orderBy('jersey_number')
             ->get();
+    }
+
+    /**
+     * Maçta hangi takım kullanıcının atandığı takımsa onu döndürür.
+     * Kullanıcının takımı maçta yer almıyorsa (ör. super_admin) ev sahibi takım fallback.
+     */
+    public function resolveUserTeamId(Matches $match, ?User $user): int
+    {
+        $userTeamIds = $user?->getTeamIds()->all() ?? [];
+
+        foreach (['home_team_id', 'away_team_id', 'team_id'] as $field) {
+            $teamId = $match->{$field};
+            if ($teamId && in_array($teamId, $userTeamIds, true)) {
+                return (int) $teamId;
+            }
+        }
+
+        return (int) ($match->home_team_id ?: $match->team_id);
     }
 
     public function positions(): Collection
@@ -169,7 +187,7 @@ class LineupService
     private function replacePlayers(Lineups $lineup, array $players): void
     {
         $match = $lineup->match()->firstOrFail();
-        $teamId = $match->home_team_id ?: $match->team_id;
+        $teamId = $this->resolveUserTeamId($match, $lineup->creator);
 
         LineupPlayers::where('lineup_id', $lineup->id)->delete();
 
@@ -179,7 +197,7 @@ class LineupService
             abort_unless(
                 $playerModel->team_id === $teamId,
                 422,
-                'Tum oyuncular macin ev sahibi takimina ait olmali.'
+                'Tum oyuncular kadronun ait oldugu takima ait olmali.'
             );
 
             LineupPlayers::create([

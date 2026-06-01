@@ -258,6 +258,66 @@ class LineupAndAiModuleTest extends TestCase
         $this->assertNotNull($lineup->players->first()->field_y);
     }
 
+    public function test_coach_can_build_smart_lineup_when_team_is_on_away_side(): void
+    {
+        Queue::fake();
+
+        $coach = User::factory()->create(['role' => User::ROLE_COACH]);
+        $coachTeam = $this->team(['name' => 'Coach Team']);
+        $opponentTeam = $this->team(['name' => 'Opponent Team']);
+        $coachTeam->staff()->attach($coach->id);
+        $position = $this->position();
+
+        // Coach takımının oyuncuları
+        $players = collect(range(1, 12))
+            ->map(fn ($i) => $this->player($coachTeam->id, $position->id, ['jersey_number' => $i]));
+
+        // Rakibin oyuncuları (AI bunları seçmemeli)
+        collect(range(13, 18))->each(fn ($i) => $this->player($opponentTeam->id, $position->id, ['jersey_number' => $i]));
+
+        // Coach deplasmanda — rakip ev sahibi
+        $match = \App\Models\Matches::create([
+            'team_id' => $opponentTeam->id,
+            'home_team_id' => $opponentTeam->id,
+            'away_team_id' => $coachTeam->id,
+            'opponent_team' => $coachTeam->name,
+            'match_date' => '2026-06-01',
+            'match_type' => 'league',
+            'location' => 'rakip saha',
+        ]);
+
+        $this->app->instance(AiProvider::class, new FakeAiProvider([
+            'players' => $players->take(11)->values()->map(fn ($player) => [
+                'player_id' => $player->id,
+                'position_id' => $position->id,
+                'recommendation_score' => 8,
+            ])->all(),
+            'note' => 'Coach takımının oyuncuları.',
+        ]));
+
+        $this->actingAs($coach)
+            ->post('/coach/smart-squad', [
+                'match_id' => $match->id,
+                'formation' => '4-4-2',
+            ])
+            ->assertRedirect();
+
+        $lineup = Lineups::with('players.player')->first();
+        $this->assertNotNull($lineup);
+
+        app(SmartLineupService::class)->processQueuedLineup($lineup->id);
+
+        $lineup->refresh()->load('players.player');
+        $this->assertEquals('completed', $lineup->status);
+        $this->assertEquals(11, $lineup->players->count());
+
+        // Tüm oyuncular coach takımına ait olmalı, rakipten kimse seçilmemeli
+        foreach ($lineup->players as $row) {
+            $this->assertEquals($coachTeam->id, $row->player->team_id,
+                'Lineup oyuncusu rakip takıma ait olmamalı.');
+        }
+    }
+
     public function test_analysis_api_exposes_options_and_keeps_manager_read_only(): void
     {
         $this->app->instance(AiProvider::class, new NullAiProvider);
