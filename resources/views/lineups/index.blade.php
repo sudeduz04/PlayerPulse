@@ -17,12 +17,14 @@
             </div>
         @endif
 
+        @php $authUser = auth()->user(); @endphp
         <div class="bg-surface-700 border border-border rounded-xl overflow-hidden overflow-x-auto">
             <table class="w-full text-sm text-left min-w-[720px]">
                 <thead class="bg-surface-600 text-gray-400 text-xs uppercase">
                     <tr>
-                        <th class="px-4 py-3">Maç</th>
-                        <th class="px-4 py-3">Takım</th>
+                        <th class="px-4 py-3">Rakip</th>
+                        <th class="px-4 py-3">Bizim Takım</th>
+                        <th class="px-4 py-3">Saha</th>
                         <th class="px-4 py-3">Tarih</th>
                         <th class="px-4 py-3">Diziliş</th>
                         <th class="px-4 py-3">Kaynak</th>
@@ -32,10 +34,41 @@
                 </thead>
                 <tbody class="divide-y divide-border">
                     @forelse($lineups as $lineup)
+                        @php
+                            // Lineup'ın gerçek takımı = oyuncuların takımı (rakipten oyuncu olmaz)
+                            $lineupTeam = $lineup->players->first()?->player?->team;
+                            $lineupTeamId = $lineupTeam?->id;
+                            $match = $lineup->match;
+                            // Rakibi lineup takımına göre çöz
+                            if ($match && $lineupTeamId) {
+                                if ($match->home_team_id === $lineupTeamId) {
+                                    $opponent = $match->awayTeam?->name ?? $match->opponent_team ?? '-';
+                                    $side = 'home';
+                                } elseif ($match->away_team_id === $lineupTeamId) {
+                                    $opponent = $match->homeTeam?->name ?? '-';
+                                    $side = 'away';
+                                } else {
+                                    $opponent = $match->opponent_team ?? '-';
+                                    $side = 'home';
+                                }
+                            } else {
+                                $opponent = $match?->opponentForUser($authUser) ?? '-';
+                                $side = $match?->sideForUser($authUser);
+                            }
+                        @endphp
                         <tr class="hover:bg-surface-600 transition-colors">
-                            <td class="px-4 py-3 text-white font-medium">vs {{ $lineup->match?->opponent_team ?? '-' }}</td>
-                            <td class="px-4 py-3 text-gray-300">{{ $lineup->match?->team?->name ?? '-' }}</td>
-                            <td class="px-4 py-3 text-gray-300">{{ $lineup->match?->match_date?->format('d.m.Y') ?? '-' }}</td>
+                            <td class="px-4 py-3 text-white font-medium">{{ $opponent }}</td>
+                            <td class="px-4 py-3 text-gray-300">{{ $lineupTeam?->name ?? $match?->team?->name ?? '-' }}</td>
+                            <td class="px-4 py-3">
+                                @if($side === 'home')
+                                    <span class="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/15 text-emerald-400">İç Saha</span>
+                                @elseif($side === 'away')
+                                    <span class="px-2 py-0.5 text-[10px] rounded-full bg-orange-500/15 text-orange-400">Deplasman</span>
+                                @else
+                                    <span class="text-gray-500 text-xs">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-gray-300">{{ $match?->match_date?->format('d.m.Y') ?? '-' }}</td>
                             <td class="px-4 py-3 text-accent font-bold">{{ $lineup->formation }}</td>
                             <td class="px-4 py-3">
                                 @if($lineup->is_ai_generated)
@@ -59,7 +92,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-8 text-center text-gray-500">Henüz kadro bulunmuyor.</td>
+                            <td colspan="8" class="px-6 py-8 text-center text-gray-500">Henüz kadro bulunmuyor.</td>
                         </tr>
                     @endforelse
                 </tbody>

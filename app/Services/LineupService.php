@@ -22,7 +22,12 @@ class LineupService
 
     public function list(array $filters, User $user): LengthAwarePaginator
     {
-        $query = Lineups::with(['match.team', 'match.homeTeam', 'match.awayTeam', 'creator']);
+        $query = Lineups::with([
+            'match.team', 'match.homeTeam', 'match.awayTeam',
+            'creator',
+            'players' => fn ($q) => $q->limit(1),
+            'players.player.team',
+        ]);
 
         if ($user->isRole(User::ROLE_COACH) || $user->isRole(User::ROLE_MANAGER)) {
             $teamIds = $user->getTeamIds();
