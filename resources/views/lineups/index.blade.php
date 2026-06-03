@@ -35,30 +35,47 @@
                 <tbody class="divide-y divide-border">
                     @forelse($lineups as $lineup)
                         @php
-                            // Lineup'ın gerçek takımı = oyuncuların takımı (rakipten oyuncu olmaz)
-                            $lineupTeam = $lineup->players->first()?->player?->team;
-                            $lineupTeamId = $lineupTeam?->id;
                             $match = $lineup->match;
-                            // Rakibi lineup takımına göre çöz
-                            if ($match && $lineupTeamId) {
-                                if ($match->home_team_id === $lineupTeamId) {
-                                    $opponent = $match->awayTeam?->name ?? $match->opponent_team ?? '-';
-                                    $side = 'home';
-                                } elseif ($match->away_team_id === $lineupTeamId) {
-                                    $opponent = $match->homeTeam?->name ?? '-';
-                                    $side = 'away';
-                                } else {
-                                    $opponent = $match->opponent_team ?? '-';
-                                    $side = 'home';
+                            // 1. Öncelik: lineup.team (DB'de kaydedilmiş)
+                            $myTeam = $lineup->team;
+                            // 2. Geriye dönük: creator'ın atanmış takımlarından maçta olan
+                            if (! $myTeam) {
+                                $creatorTeamIds = $lineup->creator?->teams->pluck('id')->all() ?? [];
+                                if ($match) {
+                                    if (in_array($match->home_team_id, $creatorTeamIds, true)) $myTeam = $match->homeTeam;
+                                    elseif (in_array($match->away_team_id, $creatorTeamIds, true)) $myTeam = $match->awayTeam;
+                                    elseif (in_array($match->team_id, $creatorTeamIds, true)) $myTeam = $match->team;
                                 }
-                            } else {
-                                $opponent = $match?->opponentForUser($authUser) ?? '-';
-                                $side = $match?->sideForUser($authUser);
                             }
+                            // 3. Son çare: oyunculardan
+                            if (! $myTeam) $myTeam = $lineup->players->first()?->player?->team;
+
+                            // Saha (home/away)
+                            $side = null;
+                            if ($match && $myTeam) {
+                                if ($match->home_team_id === $myTeam->id) $side = 'home';
+                                elseif ($match->away_team_id === $myTeam->id) $side = 'away';
+                                else $side = 'home';
+                            }
+                            // Rakip
+                            $opponent = '-';
+                            if ($match && $myTeam) {
+                                $opponent = $side === 'away'
+                                    ? ($match->homeTeam?->name ?? '-')
+                                    : ($match->awayTeam?->name ?? $match->opponent_team ?? '-');
+                            }
+                            // Yanlış kadro uyarısı
+                            $lineupPlayerTeamId = $lineup->players->first()?->player?->team_id;
+                            $isCorrupted = $myTeam && $lineupPlayerTeamId && $lineupPlayerTeamId !== $myTeam->id;
                         @endphp
                         <tr class="hover:bg-surface-600 transition-colors">
                             <td class="px-4 py-3 text-white font-medium">{{ $opponent }}</td>
-                            <td class="px-4 py-3 text-gray-300">{{ $lineupTeam?->name ?? $match?->team?->name ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-300">
+                                {{ $myTeam?->name ?? '-' }}
+                                @if($isCorrupted)
+                                    <div class="text-[10px] text-red-400 mt-0.5" title="Oyuncular yanlış takımdan; tekrar oluştur">⚠ Bozuk kadro</div>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 @if($side === 'home')
                                     <span class="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/15 text-emerald-400">İç Saha</span>

@@ -318,6 +318,41 @@ class LineupAndAiModuleTest extends TestCase
         }
     }
 
+    public function test_lineup_persists_team_id_on_creation(): void
+    {
+        $coach = User::factory()->create(['role' => User::ROLE_COACH]);
+        $coachTeam = $this->team(['name' => 'My Team']);
+        $opponentTeam = $this->team(['name' => 'Opponent']);
+        $coachTeam->staff()->attach($coach->id);
+        $position = $this->position();
+
+        $players = collect(range(1, 11))
+            ->map(fn ($i) => $this->player($coachTeam->id, $position->id, ['jersey_number' => $i]));
+
+        // Coach deplasmanda
+        $match = \App\Models\Matches::create([
+            'team_id' => $opponentTeam->id,
+            'home_team_id' => $opponentTeam->id,
+            'away_team_id' => $coachTeam->id,
+            'opponent_team' => $coachTeam->name,
+            'match_date' => '2026-06-01',
+            'match_type' => 'league',
+            'location' => 'away',
+        ]);
+
+        $this->actingAs($coach)
+            ->post('/coach/lineups', [
+                'match_id' => $match->id,
+                'formation' => '4-4-2',
+                'players' => $players->map(fn ($p) => ['player_id' => $p->id, 'position_id' => $position->id])->all(),
+            ])
+            ->assertRedirect();
+
+        $lineup = Lineups::first();
+        $this->assertEquals($coachTeam->id, $lineup->team_id,
+            'Lineup team_id coach takımına eşit olmalı, ev sahibine değil.');
+    }
+
     public function test_analysis_api_exposes_options_and_keeps_manager_read_only(): void
     {
         $this->app->instance(AiProvider::class, new NullAiProvider);

@@ -83,7 +83,9 @@ class SmartLineupService
         $match = $lineup->match;
         $this->teamAccess->assertMatch($lineup->creator, $match);
 
-        $teamId = $this->lineupService->resolveUserTeamId($match, $lineup->creator);
+        // Önce lineup'ın kaydedilmiş team_id'sini kullan; bu sayede queue worker eski kodla
+        // bile çalışsa lineup'ın ait olduğu takım sabit kalır.
+        $teamId = $lineup->team_id ?: $this->lineupService->resolveUserTeamId($match, $lineup->creator);
         $ownTeam = \App\Models\Teams::find($teamId);
         $opponentTeamName = $this->resolveOpponentName($match, $teamId);
         $isHome = $match->home_team_id === $teamId || (! $match->home_team_id && $match->team_id === $teamId);

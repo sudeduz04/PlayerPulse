@@ -10,6 +10,7 @@ class Lineups extends Model
 {
     protected $fillable = [
         'match_id',
+        'team_id',
         'created_by',
         'formation',
         'note',
@@ -28,6 +29,11 @@ class Lineups extends Model
     public function match(): BelongsTo
     {
         return $this->belongsTo(Matches::class, 'match_id');
+    }
+
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Teams::class, 'team_id');
     }
 
     public function creator(): BelongsTo

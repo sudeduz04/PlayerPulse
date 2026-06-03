@@ -24,7 +24,8 @@ class LineupService
     {
         $query = Lineups::with([
             'match.team', 'match.homeTeam', 'match.awayTeam',
-            'creator',
+            'team',
+            'creator.teams',
             'players' => fn ($q) => $q->limit(1),
             'players.player.team',
         ]);
@@ -122,10 +123,12 @@ class LineupService
         $match = Matches::findOrFail($data['match_id']);
 
         $this->teamAccess->assertMatch($user, $match);
+        $teamId = $this->resolveUserTeamId($match, $user);
 
-        return DB::transaction(function () use ($data, $user, $match, $isAiGenerated) {
+        return DB::transaction(function () use ($data, $user, $match, $isAiGenerated, $teamId) {
             $lineup = Lineups::create([
                 'match_id' => $match->id,
+                'team_id' => $teamId,
                 'created_by' => $user->id,
                 'formation' => $data['formation'],
                 'note' => $data['note'] ?? null,
@@ -135,7 +138,7 @@ class LineupService
 
             $this->replacePlayers($lineup, $data['players']);
 
-            return $lineup->load(['match.team', 'match.homeTeam', 'match.awayTeam', 'creator', 'players.player', 'players.position']);
+            return $lineup->load(['match.team', 'match.homeTeam', 'match.awayTeam', 'team', 'creator', 'players.player', 'players.position']);
         });
     }
 
@@ -143,9 +146,11 @@ class LineupService
     {
         $match = Matches::findOrFail($data['match_id']);
         $this->teamAccess->assertMatch($user, $match);
+        $teamId = $this->resolveUserTeamId($match, $user);
 
         return Lineups::create([
             'match_id' => $match->id,
+            'team_id' => $teamId,
             'created_by' => $user->id,
             'formation' => $data['formation'],
             'note' => $data['note'] ?? null,
@@ -191,8 +196,12 @@ class LineupService
 
     private function replacePlayers(Lineups $lineup, array $players): void
     {
-        $match = $lineup->match()->firstOrFail();
-        $teamId = $this->resolveUserTeamId($match, $lineup->creator);
+        // Önce lineup'ın kaydedilmiş team_id'sine bak, yoksa fallback hesapla
+        $teamId = $lineup->team_id;
+        if (! $teamId) {
+            $match = $lineup->match()->firstOrFail();
+            $teamId = $this->resolveUserTeamId($match, $lineup->creator);
+        }
 
         LineupPlayers::where('lineup_id', $lineup->id)->delete();
 
